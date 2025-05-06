@@ -1,0 +1,122 @@
+VEBuild boostrap plan:
+
+In root of the Github, just start R and source VE-Boostrap.R. It will build VEBuild and
+load the build scripts into a search path environment.
+
+very simple interface:
+ve.build(
+  packages=c("a series of RE's describing packages"),
+                       # default = "" which matches everything;
+                       # Searches in the tree of directories from the config.yml file
+  clean=FALSE,         # If TRUE, remove all package contents in ve-src; otherwise just copy over them
+  ask=interactive(),   # If TRUE, ask to build (Yes) or skip (No) each package, or (Cancel) the whole build
+  onlyInstall=TRUE,    # If FALSE, use miniCRAN to pull down the packages before installing from local copies,
+                       # Otherwise, just install them from online
+  dryrun=FALSE         # If TRUE, don't actually do the download/install/build - just say what we would do
+                       # Could still use miniCRAN to expand dependencies
+) # May add other options
+
+Maybe go back to using the import package to load the helper scripts like ve.build (so we can hide
+non-exported functions...). Might not export anything other than ve.build(), and perhaps ve.start().
+
+When ve.build() runs, it detache all the packages in the build list if they're loaded (unloadNamespace,
+detach, etc.). VEBase has its own implementation of ve.build() which reloads VEBuild and then unloads it
+again, then invokes the ve.build() functionn from VEBuild passing the parameters from VEBase.
+
+ve.start(runtime=Sys.getenv("VE_RUNTIME")) will load VEBase and run VEBase::startVisionEval(), which in turn
+loads VEModel.
+
+ve.build; Will run through these steps always:
+
+  - Read the config.yml file for where to look for buildables
+  - Assemble the packages to build (directories containing DESCRIPTION)
+  - Get the dependencies from all the descriptions
+  - Install the dependencies to ve-lib (download first to local package repository if saveDownloads)
+    Identify dependencies not available in CRAN or BioC, and call those Local (need not be VE)
+    Error if any dependency is not in CRAN/BioC or Local
+  - Order the package builds based on their inner dependencies
+    Visit each in turn and if its Local dependencies are not above it in the list, move it to the
+    bottom; proceed until we get to the bottom (this is a pretty inefficient bubble sort, but is
+    easy to implement and will yield a correct build order)
+  - Visit each package in turn and do the basic build (also used in VE-Bootstrap.R for VEBuild
+    Assemble source code into ve-src, then build from there
+    Eventually we add in calls for estimation, documentation etc.
+    Always build the packages into a contrib.url (source and/or binary) - no matter what onlyInstall says.
+    Then install them from there to ve-lib
+  - Load VEBase and change to the runtime directory (so ready to run right after the build)
+
+Other things we have built in the past:
+  - Dump of settings (all now in ve-config.yml)
+  - Documentation website (don't do that through VEBuild at all)
+  - Express build (not running the documentation/data step if package is already there)
+
+OLDER:
+
+VEBuild R folder plan:
+
+Each build function calls configuration, which will build an environment the first time,
+then update it and return it in later calls.
+
+Key variables are placed in an environment created and shared for the purpose.
+
+Could use the import package to create scripts like build-versions.sh and the VEBuild builder
+(detaches VEBuild and rebuilds it as a standard R package). In fact, all of these could
+be "import" functions - VEBuild would just load them from its systemdata so they're not
+dependent on being run from the loaded package. Then we can rebuild VEBuild itself, and
+then when we reload it, it reloads the build functions (which will unload VEBuild later as
+needed, since they're not really part of it.
+
+Each script file becomes a function - some are obsolete. These have relevant internals:
+
+# Overall build driver that will visit each of the core pieces
+  - Configuration
+  - Build identification
+  - Dependency download and installation
+  - Module building
+  - Documentation / Book building
+  - Make installer (lightweight <=> heavyweight)
+
+# Configuration
+
+build-versions.sh              # External script to run build across multiple R versions
+                               # Runs outside R and remakes each version
+build-config.R                 # Initialize Build Environment from .Renviron/Environment
+get-runtime-config.R           # Obsolete - just access the package environment
+find-R.bat                     # To locate R versions on Windows
+find-R.R                       # To locate R versions on non-Windows
+
+# Builders
+
+build-external.R               # Clones and manages github repository packages - repurpose for Github source type
+build-modules.R                # Workhorse for VE (and perhaps other) package build
+clean-module.R                 # Blow away src and other module artifacts for a clean build (for a named list of modules)
+
+# Runtime creator
+
+build-runtime.R                # Restructure to use VEBase::ve.setup to create
+
+# Dependency and package management
+
+build-repository.R             # Download dependencies into local miniCRAN (source,binary,both), dependencies-repo
+build-velib.R                  # Install dependencies in binary library
+build-online-packages.R        # Use to create ve-pkg for pushing to external R repo, or for creating ve-pkg locally
+build-runtime-packages-bin.R   # Merge "binary" contriburl from ve-pkg-repo and dependencies-repo into ve-pkg
+build-runtime-packages-full.R  # Merge "source" contriburl from ve-pkg-repo and dependencies-repo into ve-pkg
+
+# Function to build the book at VE_BOOK (root folder for VisionEval-docs clone)
+
+build-book.R                   # For generating documentation; book location needs to be set in .Renviron as VE_BOOK
+
+# Repurpose as noted
+
+build-installer-base.R         # New VEBase installer strategy
+build-installer-bin.R          # Make a binary ve-pkg installer
+build-installer-full.R         # Make a source ve-pkg installer
+
+These may have parts to salvage:
+
+build-docs-framework.R
+build-docs-visual.R
+build-docs.R
+build-inventory.R
+build-tester.R

@@ -1,0 +1,7 @@
+# YAML configuration file for VEBuild
+
+PackageSources:               # absolute path or relative to VE_HOME
+  - sources                   # name of sub-directory of VE_HOME
+  - optional                  # Original MultiModal module plus VERPAT model package
+  # - C:/Git-Repos/VisionEval-extras  # Extra packages - everything under this directory
+  # - C:/Git-Repos/OtherPackages/VEMultiModal2025 # Directory for an individual package

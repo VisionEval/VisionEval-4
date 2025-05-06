@@ -1,0 +1,26 @@
+Package: VE2001NHTS
+Type: Package
+Title: Create 2001 NHTS datasets for model estimation
+Version: 3.1.1
+Date: 2024-01-23
+Author: Brian Gregor [aut, cre],
+Maintainer: Jeremy Raw <jeremy.raw@dot.gov>
+Copyright: AASHTO
+Description: This package creates and saves 3 data frames that are used to 
+    estimate various VisionEval models. These data frames are created from
+    the publically available data from the 2001 National Household Travel Survey 
+    (NHTS) augmented with data on metropolitan area freeway supply and transit
+    supply. The package produces a data frames of household characteristics and
+    travel, vehicle characteristics, household tours .
+License: file LICENSE
+LazyData: TRUE
+LazyDataCompression: bzip2
+Depends: R (>= 4.0.0)
+Imports:
+    visioneval
+Suggests:
+    knitr
+VignetteBuilder: knitr
+Encoding: UTF-8
+Roxygen: list(load='source')
+RoxygenNote: 7.2.3

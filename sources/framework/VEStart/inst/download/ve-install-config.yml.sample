@@ -1,0 +1,21 @@
+# Sample installation configuration
+# If you're having trouble getting the install script to work, populate
+#   the ve-install-config.yml file and put it in the directory that is
+#   current for your R version before pasting in the line to run the
+#   install script.
+# If ve-install-config.yml exists, installVisionEval() will not be run automatically
+#   Instead, the script will display the configuration and prompt you to run the function
+#   You can add function parameters (see the script source code and documentation) to
+#   indicate whether you want to launch a build enviroment
+
+# ve.distributions describes Github repositories that offer releases with VisionEval installers
+
+# Distribution descriptors are case-insensitive
+# The install script presents a dialog based on using the "latest" release, but there is a
+# radio button to show all releases with assets and to select an alternate release (e.g.
+# for an earlier version).
+
+ve.distributions:
+  - user: visioneval    # User or organization
+    repository:         # Repository Names
+    - visioneval-4

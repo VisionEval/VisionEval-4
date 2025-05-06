@@ -1,0 +1,27 @@
+Package: VEHouseholdTravel
+Type: Package
+Title: Calculate Household Walk, Bike, and Transit Trips
+Version: 3.1.1
+Date: 2024-01-23
+Author: Brian Gregor [aut, cre], Aditya Gore <aditya.gore@rsginc.com> [cre]
+Maintainer: Jeremy Raw <jeremy.raw@dot.gov>, Aditya Gore <aditya.gore@rsginc.com>
+Copyright: AASHTO
+Description: Contains modules for predicting household average DVMT, trips by
+    alternative modes (walking, biking, transit), household vehicle trips, and 
+    percentage reduction in household DVMT a result of diversion of SOV DVMT to 
+    slower vehicle modes (bike etc.)
+License: file LICENSE
+LazyData: TRUE
+LazyDataCompression: bzip2
+Depends: R (>= 4.0.0)
+Imports:
+    visioneval,
+    data.table,
+    pscl
+Suggests:
+    VE2001NHTS,
+    knitr
+Encoding: UTF-8
+VignetteBuilder: knitr
+Roxygen: list(load='source')
+RoxygenNote: 7.2.3
