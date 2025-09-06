@@ -6,11 +6,6 @@
 # RUNTIME ENVIRONMENT
 #####################
 
-# The ve.env environment is accessed via VEModel::runtimeEnvironment.
-
-ve.env <- new.env()
-ve.env$RunParam_ls <- list()
-
 #ACCESS R ENVIRONMENT FOR MODEL RUN
 #==================================
 #' Access an R environment for the runtime installation.
@@ -90,10 +85,49 @@ ve.env$RunParam_ls <- list()
 #'   OutputDir/query_\%datetime\% (default "Measures_\%scenario\%_\%years\%_\%geography\%.csv")}
 #' }
 #'
+#' @param ve.new.env an environment to use in place of package built-in (default use VEModel:::ve.env)
 #' @return an R environment "ve.env"
 #' @import visioneval
 #' @export
-runtimeEnvironment <- function() { ve.env }
+runtimeEnvironment <- function(ve.new.env=NULL) {
+  # Operates on "ve.env" attached to search path (and manipulated also by VEStart and VEBuild)
+  # The ve.env environment is accessed via VEModel::runtimeEnvironment.
+
+  # Link VEModel environment to attached "ve.env" created in VE-Bootstrap.R or VEStart
+  ve.env <- if ( ! "ve.env" %in% search() ) {
+    attach(NULL,name="ve.env")
+  } else {
+    as.environment("ve.env")
+  }
+
+  # Load ve.env from ve.new.env
+  # NOTE: probably obsolete since everyone should be using the attached "ve.env" environment
+  if ( ! missing(ve.new.env) && is.environment(ve.new.env) ) {
+    for (n in ls(ve.new.env, all.names=TRUE)) assign(n, get(n, ve.new.env),ve.env)
+  }
+  # Back stop to make sure we have a place to load system and model configurations
+  if ( ! "RunParam_ls" %in% ls(ve.env) ) assign("RunParam_ls",list(),envir=ve.env)
+  ve.env
+}
+
+# Initialize VEModel
+#' Set up initial VEModel environment
+#'
+#' @return None
+#' @export
+initVisionEval <- function() {
+  message("Loading VisionEval 4.0!")
+  ve.env <- runtimeEnvironment()      # establish VEModel environment (possibly set up externally by VEStart)
+  getSetup(reload=TRUE)               # reload global RunParam_ls; also will align with ve.env$ve.runtime
+  ModelRoot <- getModelDirectory()    # Full path built from ve.runtime and global visioneval.cnf model directory name
+  if ( ! dir.exists(ModelRoot) ) {
+    message("Creating runtime '",basename(ModelRoot),"' directory")
+    dir.create(ModelRoot,recursive=TRUE,showWarnings=FALSE)
+  }
+  message("Running in ",ve.env$ve.runtime)
+  setwd(ve.env$ve.runtime)
+  NULL
+}
 
 # Package defaults for VisionEval getRunParameter
 # Some of these are different from the framework defaults (e.g. ResultsDir).
@@ -154,8 +188,6 @@ loadRuntimeConfig <- function() {
   # ParamDir defaults to ve.runtime
   ve.env <- runtimeEnvironment()
   if ( is.null(ve.env$ve.runtime) ) setRuntimeDirectory() # VE_RUNTIME or getwd()
-  # TODO: load/build VE package manifest (for installModel, plus list of modules).
-  # buildPackageManifest() # file called .VE-packages.lst (hidden attribute like .REnviron).
   return( visioneval::loadConfiguration(ParamDir=ve.env$ve.runtime) )
 }
 
@@ -164,8 +196,9 @@ loadRuntimeConfig <- function() {
 
 #' Return runtime base RunParam_ls (loading it if not present)
 #'
-#' \code{getSetup} gets a subset of the current runParameters by name. It does NOT
-#' supply default values. It returns only the ones that are defined.
+#' \code{getSetup} gets a subset of the current runParameters by name. It does NOT supply default
+#' values. It returns only the ones that are defined. As a side effect, will create the package
+#' ve.env via loadRuntimeConfig.
 #'
 #' @param paramNames is a character vector of parameter names identifying a subset of runParameters
 #'   to retrieve. If not provided, return all defined parameters (but not any that are defaulted).
@@ -178,6 +211,7 @@ loadRuntimeConfig <- function() {
 #' @return A list of defined run parameters (possibly empty, if no parameters are defined)
 #' @export
 getSetup <- function(object=NULL,paramNames=NULL,fromFile=TRUE,reload=FALSE) {
+  ve.env <- runtimeEnvironment()
   if ( is.list(object) ) { # assume its a Param_ls list
     RunParam_ls <- object
   } else if ( inherits(object,"VEResults") ) {
@@ -282,7 +316,7 @@ updateSetup <- function(object=NULL,inFile=TRUE,Source="interactive",Param_ls=li
     visioneval::addParameterSource(list(...),Source)
   )
   # locate the settings to work on, using object and inFile
-  if ( is.null(object) ) object <- ve.env
+  if ( is.null(object) ) object <- runtimeEnvironment()
   # udpate the settings using the framework merge settings function
   param.name <- if ( inFile ) "loadedParam_ls" else "RunParam_ls"
 
@@ -317,6 +351,7 @@ updateSetup <- function(object=NULL,inFile=TRUE,Source="interactive",Param_ls=li
 writeSetup <- function(object=NULL,filename=NULL,fromFile=TRUE,overwrite=FALSE) {
 
   Param_ls <- getSetup(object=object,fromFile=fromFile)
+  ve.env <- runtimeEnvironment()
   ParamDir <- ve.env$ve.runtime # Default to save parameters to root of runtime directory
   if ( is.null(object) ) {
     ParamName <- "runtime"
@@ -385,6 +420,7 @@ writeSetup <- function(object=NULL,filename=NULL,fromFile=TRUE,overwrite=FALSE) 
 #' @return The normalized path to the directory that has been selected as the ve.runtime
 #' @export
 setRuntimeDirectory <- function(Directory=NULL) {
+  ve.env <- runtimeEnvironment()
   if ( is.null(Directory) ) {
     Directory <- if ( ! exists("ve.runtime",envir=ve.env,inherits=FALSE) ) getwd() else ve.env$ve.runtime
   } else {
@@ -420,9 +456,10 @@ getModelDirectory <- function() {
 #' Return the runtime directory established when VEModel package is loaded or by a later call to
 #'   \code{setRuntimeDirectory}. If the runtime directory has not yet been set, set it to the
 #'   working directory.
-#' @return The ve.runtime directory from the package environment, ve.env
+#' @return The ve.runtime directory from the attached runtime environment, "ve.env"
 #' @export
 getRuntimeDirectory <- function() {
+  ve.env <- runtimeEnvironment()
   Directory <- ve.env$ve.runtime
   if ( is.null(Directory) ) Directory <- setRuntimeDirectory()
   return(Directory)
@@ -508,7 +545,8 @@ uniqueSources <- function(Param_ls,shorten=NULL) {
 #' @export
 getModelIndex <- function(reset=FALSE) {
 
-  # Uses the package global ve.env to cache models and variants
+  # Uses the attached "ve.env" to cache models and variants
+  ve.env <- runtimeEnvironment()
   if ( ! reset && "modelIndex" %in% names(ve.env) ) return(ve.env$modelIndex)
 
   # Hack for developing packages with pkgload if package is not

@@ -286,7 +286,7 @@ checkDataConsistency <- function(DatasetName, Data_, DstoreAttr_) {
   }
   #Check if character and SIZE is adequate
   if (typeof(Data_) == "character") {
-    MaxSize <- max(nchar(Data_))
+    MaxSize <- max(nchar(Data_),na.rm=TRUE)
     if (MaxSize > DstoreAttr_$SIZE) {
       Message <-
         paste0("Attempting to write character data of length (",
@@ -981,7 +981,7 @@ SpecRequirements <- function(){
         TABLE = list(ValueType = "character",
                      ValuesAllowed = "[0-9a-zA-Z_]"),
         GROUP = list(ValueType = "character",
-                     ValuesAllowed = c("Global", "BaseYear", "Year")),
+                     ValuesAllowed = c("Global", "BaseYear", "Year", "PreviousYear")),
         TYPE = list(ValueType = "character",
                     ValuesAllowed = "[0-9a-zA-Z_]"),
         UNITS = list(ValueType = "character",

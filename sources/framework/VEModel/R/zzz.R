@@ -4,15 +4,18 @@
 # This file contains an .onAttach function that loads the VisionEval
 # runtime environment
 
-# .onAttach is called when a library attached to
+# .onAttach is called when a library is attached to the search path
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage("Welcome to the new VisionEval!")
   initLog(Save=FALSE,Threshold=Sys.getenv("VE_LOGLEVEL",unset="warn")) # Set default logging threshold
-  getSetup(reload=TRUE)   # with no arguments, reload the ve.runtime configuration and return ve.env$RunParam_ls
+  if ( ! "package:VEStart" %in% search() ) { # running without VEStart
+    packageStartupMessage("Welcome to the VisionEval 4.0!")
+    getSetup(reload=TRUE)   # with no arguments, reload the ve.runtime configuration and return ve.env$RunParam_ls
+  } # else all of this will have been done in VEStart and will get set up when VEStart loads VEModel
 }
 
 .onDetach <- function(libpath) {
   # If attaching the package put us in a different working directory,
   # then detaching should put us back where we came from.
-  if ( !is.na(ve.env$start.dir) ) setwd(ve.env$start.dir)
+  ve.env <- runtimeEnvironment()
+  if ( "start.dir" %in% ls(ve.env) && !is.na(ve.env$start.dir) ) setwd(ve.env$start.dir)
 }
