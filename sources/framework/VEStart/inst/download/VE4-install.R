@@ -58,7 +58,6 @@
 #         Checks for and installs RTools if necssary (kick over to manual download/install)
 #         Checks for VE-Bootstrap.R in unzipped VE_SOURCE subfolder and sources that script
 #         (Effectively starting a build process, using VE_HOME from the installer environment)
-#         TODO: change the build script to respect VE_SOURCE
 
 # - Start VisionEval
 
@@ -465,6 +464,38 @@ fetchInstaller <- function(installer) {
   invisible(retrieved) # name of downloaded file with attribute stating "Runtime" or "Build" install type
 }
 
+### Helper for performing installation
+
+createBootstrapRestart <- function(ve.home,ve.source.root) {
+  Sys.setenv(
+    VE_HOME=ve.home,
+    VE_ROOT=ve.source.root,
+    VE_SOURCE=file.path(ve.source.root,"sources")
+  )
+  # Copy .Rprofile from VE_ROOT (same place as VE-Bootstrap.R)
+  rprofile <- file.path(ve.source.root,".Rprofile")
+  if ( ! file.exists(rprofile) ) stop(call.=FALSE,"Source code at ",ve.source.root," is missing .Rprofile")
+  file.copy(rprofile,ve.home,overwrite=TRUE)
+
+  # Create .Renviron - specifically saving/replacing VE_HOME, VE_ROOT
+  renv.file <- file.path(ve.home,".Renviron")
+  # If .Renviron exists, read its lines
+  if ( file.exists(renv.file) ) {
+    renv.txt <- readLines(renv.file,warn=FALSE)
+    renv.txt <- grep("^(VE_HOME|VE_ROOT)=",renv.txt,value=TRUE,invert=TRUE) # Overwrite these lines below
+  } else renv.txt <- character(0)
+  # Now replace VE_HOME and VE_ROOT with updated values from ve.home and ve.runtime respectively
+  renv.txt <- c(
+    renv.txt,
+    paste0("VE_HOME=",normalizePath(ve.home,winslash="/",mustWork=TRUE)),
+    paste0("VE_ROOT=",normalizePath(ve.source.root,winslash="/",mustWork=TRUE))
+  )
+  writeLines(renv.txt,renv.file)
+
+  # Create Startup.Rdata as save(list=character(0),file=file.path(ve.home,"Startup.Rdata"))
+  save(list=character(0),file=file.path(ve.home,"Startup.Rdata"))
+}
+
 ####### Perform the installation based on the downloaded installer type and information
 
 doInstallation <- function(retrieved) {
@@ -512,13 +543,15 @@ doInstallation <- function(retrieved) {
 
   if ( installType == "LocalClone" ) {
     # LocalClone is just looking at a directory containing VE-Bootstrap.R
-    # Point VE_SOURCE at the sources folder within it, then run its VE_Bootstrap.R
-    Sys.setenv(
-      VE_SOURCE=file.path(retrieved,"sources")
-    ) # 
+    # Point VE-Bootstrap.R to the right stuff
+    # Create (re-)startup files in VE_HOME
+    # Set VE_HOME and VE_ROOT in environment for use by VE-Bootstrap.R
+    ve.source.root <- retrieved
+    createBootstrapRestart(ve.env$ve.home,ve.source.root) # Creates .Rprofile, .Renviron, Startup.Rdata
+
     return(
       function() {
-        bootstrap <- file.path(retrieved,"VE-Bootstrap.R")
+        bootstrap <- file.path(ve.source.root,"VE-Bootstrap.R")
         if ( ! file.exists(bootstrap) ) stop("Installation failed: could not load ", bootstrap)
         source(bootstrap)
       }
@@ -568,12 +601,12 @@ doInstallation <- function(retrieved) {
         install.packages(pkgs=packages,repos=all.repos,lib=ve.lib,type=pkgType)
       }
       return(
-        # TODO: this appears to be using an earlier VE_HOME setup if that was hanging out
-        # in the environment. Need to push our own notion of ve.home back through Sys.setenv
-        # so we get the right ve-lib.
         function() {
           if ( ! require(VEStart,quietly=TRUE) ) stop("Installation failed: could not load VEStart")
-          startVisionEval(ve.runtime=NA) # ve.runtime=NA says to ignore any VE_RUNTIME set in environment
+          startVisionEval(ve.runtime=NA,setupHome=TRUE)
+          # ve.runtime=NA says to ignore any VE_RUNTIME set in environment
+          # User will pick VE_RUNTIME and startup files will be created there
+          # setupHome says also to construct startup files in installers VE_HOME (next to ve-lib)
         }
       )
     } else if ( installType == "BuildSource" ) {
@@ -586,14 +619,20 @@ doInstallation <- function(retrieved) {
       # Unzip the build source distribution (may take a while!)
       ve.source.root <- file.path(ve.home,"build-source")
       if ( dir.exists(ve.source.root) ) {
-        message("build-source directory already exists.")
-        stop("Please remove ",ve.source.root," and try install again")
+        erase.existing <- askYesNo("Build-source directory already exists. Overwrite it?")
+        if ( isTRUE(erase.existing) ) {
+          unlink(ve.source.root,recursive=TRUE)
+        } else message("Using prior downloaded source code. Cancel and delete build-source to get a new copy.")
       }
-      unzip(retrieved,exdir=exdir) # creates exname subdirectory
-      file.rename(file.path(exdir,exname),ve.source.root)
+      if ( ! dir.exists(ve.source.root) ) {
+        unzip(retrieved,exdir=exdir) # creates exname subdirectory
+        file.rename(file.path(exdir,exname),ve.source.root)
+      }
 
       # Point VE-Bootstrap.R to the right stuff
-      Sys.setenv(VE_SOURCE=file.path(ve.source.root,"sources"))
+      # Create (re-)startup files in VE_HOME
+      # Set VE_HOME and VE_ROOT in environment for use by VE-Bootstrap.R
+      createBootstrapRestart(ve.env$ve.home,ve.source.root) # Creates .Rprofile, .Renviron, Startup.Rdata
 
       return(
         function() {

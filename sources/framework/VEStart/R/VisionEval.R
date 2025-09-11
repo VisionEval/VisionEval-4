@@ -307,7 +307,7 @@ ve.setup.environ <- function(ve.home,ve.runtime,setupHome=FALSE,overwrite=FALSE)
 
     # Create or update .Renviron (VEBuild will add VE_BUILD to the list of defined locations, defaulting to VE_HOME)
     renv.file      <- file.path(location,".Renviron")
-    # If .Renviron exists, read read its lines
+    # If .Renviron exists, read its lines
     if ( file.exists(renv.file) ) {
       renv.txt <- readLines(renv.file,warn=FALSE)
       renv.txt <- grep("^(VE_HOME|VE_RUNTIME)=",renv.txt,value=TRUE,invert=TRUE) # Overwrite these lines below
