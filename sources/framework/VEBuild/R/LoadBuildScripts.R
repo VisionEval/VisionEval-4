@@ -69,7 +69,7 @@ loadRuntimeEnvironment <- function() { # Keep this synchronized with VE-Bootstra
   # Generally with the default names and locations, these will end up in the right place
   this.R <- paste(c(R.version["major"],R.version["minor"]),collapse=".")
   two.digit.R <- tools::file_path_sans_ext(this.R)
-  ve.env$ve.lib <- file.path(ve.env$ve.home,ve.env$ve.lib.name,two.digit.R)
+  ve.env$ve.lib <- file.path(Sys.getenv("VE_INSTALL",ve.env$ve.home),ve.env$ve.lib.name,two.digit.R)
   if ( ! dir.exists(ve.env$ve.lib) ) {
     dir.create(ve.env$ve.lib,recursive=TRUE)
     # if ( ! ve.env$ve.lib %in% .libPaths() ) .libPaths(ve.env$ve.lib,.libPaths())

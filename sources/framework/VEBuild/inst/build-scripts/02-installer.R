@@ -74,7 +74,9 @@ buildOneInstaller <- function(pkgType,bld.env,debug) {
   }
 
   # Basis for MANIFEST file (Git information)
-  build.info <- c(list(pkgType=pkgType),makeGitInfo(ve.env$ve.home))
+  # There are various ways this can fail if we didn't build the
+  # packages from a standard git repository structure...
+  build.info <- c(list(pkgType=pkgType),makeGitInfo(ve.env$ve.sources))
 
   #
   owd <- getwd()
@@ -84,8 +86,9 @@ buildOneInstaller <- function(pkgType,bld.env,debug) {
     # Destination says where to unzip
     build.info[["Destination"]] <- "ve-lib"
     zipfile <- zipName(paste0("WinLibrary-R",bld.env$two.digit.R),ve.install)
-    try( setwd(bld.env$ve.lib) )
-    if ( getwd() != bld.env$ve.lib ) failure(paste0("Could not change to library ",bld.env$ve.lib))
+    try( setwd(ve.env$ve.lib) )
+    if ( getwd() != ve.env$ve.lib ) failure(paste0("Could not change to library ",ve.env$ve.lib))
+    message("Zipping library from ",ve.env$ve.lib) # should use ve.env...
     manifest <- saveGitInfo(build.info,".",filename="MANIFEST") # just put it in ve-lib
     # saveGitInfo is defined in 01-build.R
   } else {

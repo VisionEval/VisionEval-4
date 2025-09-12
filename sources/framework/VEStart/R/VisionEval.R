@@ -149,7 +149,7 @@ startVisionEval <- function(
   ve.env$ve.runtime <- ve.runtime
   ve.env$ve.home <- ve.home
   Sys.setenv(VE_HOME=ve.home,VE_RUNTIME=ve.runtime) # Somewhat redundantly, also save to operating system environment
-  # TODO/NOTE: ve.setup.environ below will also save VE_HOME and VE_RUNTIME into the .Renviron startup file
+  # NOTE: ve.setup.environ below will also save VE_HOME and VE_RUNTIME into the .Renviron startup file
 
   # Clear VEModel if already present
   if ( "package:VEModel" %in% search() ) detach("package:VEModel")
@@ -203,7 +203,6 @@ startVisionEval <- function(
 startup.files <- c(
   ".Renviron",
   ".Rprofile",
-  "launch.bat",
   "visioneval.cnf.sample",
   "VisionEval.Rproj",
   "r.version"
@@ -248,6 +247,13 @@ checkSetup <- function(ve.home,ve.runtime,overwrite=FALSE) {
       } else good.r.version <- TRUE
     }
   } else good.r.version <- TRUE # it doesn't exist or we're overwriting it, so we will carry on with this.R
+
+  # Do we have launch.bat for this R version?
+  launch.bat <- paste0("launch_R",this.R,".bat")
+  runtime.launch.bat <- file.path(ve.runtime,launch.bat)
+  runtime.files <- c(runtime.files,runtime.launch.bat)
+  home.launch.bat <- file.path(ve.home,launch.bat)
+  home.files <- c(home.files,home.launch.bat)
 
   # Report on R version and startup file existence
   return(

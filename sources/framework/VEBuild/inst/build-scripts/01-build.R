@@ -181,12 +181,6 @@ ve.build.config <- function(config=list(),debug=FALSE, quiet=FALSE) {
   bld.env$this.R <- paste(c(R.version["major"],R.version["minor"]),collapse=".")
   bld.env$two.digit.R <- tools::file_path_sans_ext(bld.env$this.R)
 
-  # NOTE: this ve.lib may not be the same as ve.env$ve.lib
-  # It won't matter if they differ, but there may be a few rendundant downloads
-  # Put ve.lib in VE_HOME to interoperate between developer and end-user installations
-  bld.env$ve.lib <- file.path(ve.env$ve.home,raw.config$BuildTargets["ve.lib"],bld.env$two.digit.R)
-  if ( ! dir.exists(bld.env$ve.lib) ) dir.create(bld.env$ve.lib,recursive=TRUE)
-
   # This is the location where the VE packages are built up prior to being built into R packages
   # That will include steps like creating the "data" directory, building module_docs, etc.
   bld.env$ve.src <- file.path(ve.env$ve.build.dir,raw.config$BuildTargets["ve.src"])
@@ -200,9 +194,6 @@ ve.build.config <- function(config=list(),debug=FALSE, quiet=FALSE) {
   bld.env$build.contriburl.src <- utils::contrib.url(bld.env$ve.repository, "source") # Always build VE source package too
   if ( ! dir.exists(bld.env$build.contriburl) ) dir.create(bld.env$build.contriburl,recursive=TRUE)
   if ( ! dir.exists(bld.env$build.contriburl.src) ) dir.create(bld.env$build.contriburl.src,recursive=TRUE)
-
-  # Obscure error message if ve.lib is already in .libPaths() so we need to test
-  if ( ! bld.env$ve.lib %in% .libPaths() ) .libPaths(c(bld.env$ve.lib,.libPaths())) # add ve.lib to front of .libPaths() if not present
 
   bld.env$CRAN.mirror <- raw.config$CRAN.mirror # to simplify access when we start downloading dependencies
 
@@ -224,9 +215,9 @@ ve.build.config <- function(config=list(),debug=FALSE, quiet=FALSE) {
     print(bld.env$package.paths)
   }
   # The following shortcuts get used during build to find obsolete installed packages
-  pkgs.info <- utils::installed.packages(lib.loc=bld.env$ve.lib)
+  pkgs.info <- utils::installed.packages(lib.loc=ve.env$ve.lib)
   if ( nrow(pkgs.info) == 0 ) 
-  pkgs.info <- utils::installed.packages(lib.loc=bld.env$ve.lib)[,c("Package","Version")]
+  pkgs.info <- utils::installed.packages(lib.loc=ve.env$ve.lib)[,c("Package","Version")]
   bld.env$pkgs.installed <- pkgs.info[,"Package"] # list of installed package names (including dependencies)
   bld.env$pkgs.version <- pkgs.info[,"Version"]   # versions of the packages (only checked later for VE packages)
   rm(pkgs.info)
