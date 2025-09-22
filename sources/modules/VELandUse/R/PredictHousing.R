@@ -768,6 +768,20 @@ PredictHousing <- function(L) {
   rm(az, IncQBreaks_)
   #Tabulate households by house type and income quartile by Azone
   Ht <- c("SF", "MF")
+
+  # Added check below to catch an uncommon but hard to debug error, 2025-09-22
+  checkHouseType <- sapply(Hh_df_Az, function(x) all(Ht %in% unique(x$HouseType)))
+  if ( ! all(checkHouseType) ) {
+    Msg <-
+    paste0("Error for PredictHousing module.\n",
+      "Each Azone must have at least 1 single family and 1 multi-family dwelling.\n",
+      "Check bzone_dwelling_type.csv\n",
+      "Azones with errors: ",paste(names(checkHouseType)[!checkHouseType],collapse=", ")
+    )
+    writeLog(Msg,Level="error")
+    stop("Missing house types in module PredictHousing",call.=FALSE)
+  }
+
   HhTab_HtIq_Az <-
     lapply(Hh_df_Az, function(x) table(x$HouseType, x$IncQ)[Ht,Iq])
   
