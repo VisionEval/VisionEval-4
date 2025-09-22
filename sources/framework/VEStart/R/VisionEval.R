@@ -162,8 +162,9 @@ startVisionEval <- function(
   # Set up ve-lib (R library location for installed VE packages and dependencies)
   # The same library location will hold sub-directories for the major/minor R version that is
   # running this installation.
+  # NOTE: VE_INSTALL is used to locate ve-lib outside Git development tree (used by ve.build())
   ve.env$this.R <- paste(c(R.version["major"],R.version["minor"]),collapse=".")
-  ve.env$ve.lib <- file.path(ve.home,ve.lib.name,tools::file_path_sans_ext(ve.env$this.R))
+  ve.env$ve.lib <- file.path(Sys.getenv("VE_INSTALL",ve.env$ve.home),ve.lib.name,tools::file_path_sans_ext(ve.env$this.R))
   if ( ! dir.exists(ve.env$ve.lib) ) {
     message("VisionEval is not installed for the version of R you are running: R",ve.env$this.R)
     stop("Please re-run the VisionEval installer using R",ve.env$this.R)

@@ -852,7 +852,9 @@ makeGitInfo <- function(from) {
   # Collect Git information for DESCRIPTION
   today <- date()
   build.info <- try(repo.info <- gert::git_info(from))
-  build.info <- if ( class(build.info) != "try-error" ) {
+  build.info <- if ( class(build.info) != "try-error" && !is.na(repo.info$remote) ) {
+    # remote may be missing if we are working in a local branch that
+    # has not been pushed to the remote repository.
     list(
       VEBuildDate=today,
       VEBranch=repo.info$shorthand,
@@ -862,11 +864,19 @@ makeGitInfo <- function(from) {
       VELocalRepoPath=repo.info$path
     )
   } else {
-    list(
-      VEBuildDate=today,
-      VEBranch="Not from Git repository",
-      VELocalRepoPath=from
-    )
+    if ( class(build.info) == "try-error" ) {
+      list(
+        VEBuildDate=today,
+        VEBranch="Not from Git repository",
+        VELocalRepoPath=from
+      )
+    } else {
+      list(
+        VEBuildDate=today,
+        VEBranch="Not pushed to Git repository",
+        VELocalRepoPath=from
+      )
+    }
   }
   return(build.info)
 }
