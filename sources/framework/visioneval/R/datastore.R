@@ -314,7 +314,7 @@ listDatastoreRD <- function(DataListing_ls = NULL, ModelStateFile = NULL, envir=
     getModelState(envir)
   }
 
-  #If no Datastore component, get from DatastoreListing.RData
+  #If no Datastore component, get from DatastoreListing.Rda
   listingPath <- file.path(G$ModelStatePath, G$DatastoreName, "DatastoreListing.Rda")
   if (is.null(G$Datastore)) {
     if ( ! file.exists(listingPath) ) {
@@ -331,6 +331,7 @@ listDatastoreRD <- function(DataListing_ls = NULL, ModelStateFile = NULL, envir=
         groupname = loadEnv$DatastoreListing_ls$groupname,
         stringsAsFactors = FALSE
       )
+      # Add separately since the attribute column has list elements which are sketchily supported in data.frames
       Datastore_df$attributes <- loadEnv$DatastoreListing_ls$attributes
     }
   } else {
@@ -338,11 +339,13 @@ listDatastoreRD <- function(DataListing_ls = NULL, ModelStateFile = NULL, envir=
   }
 
   #Update the datastore listing
+  #Updates the group/name/groupname and attributes spec
   if (!is.null(DataListing_ls)) {
     NewDatastore_df <-
       rbind(
         Datastore_df[,c("group", "name", "groupname")],
-        DataListing_ls[c("group", "name", "groupname")])
+        DataListing_ls[c("group", "name", "groupname")]
+      )
     NewDatastore_df$attributes <-
       c(Datastore_df$attributes, list(DataListing_ls$attributes))
   } else {
@@ -730,10 +733,11 @@ writeToTableRD <- function(Data_, Spec_ls, Group, Index = NULL, envir=modelEnvir
              integer = integer(Length),
              logical = logical(Length))
     Attr_ls <- Spec_ls
+    # Set up history of units provided to the Datastore by the writing moduLe
     listDatastoreRD(
       list(group = paste0("/", GroupName), name = Name,
            groupname = paste(GroupName, Name, sep = "/"),
-           attributes = Spec_ls
+           attributes = Attr_ls
       ),
       envir=envir
     )
@@ -1009,6 +1013,12 @@ initDatasetH5 <- function(Spec_ls, Group, envir=modelEnvironment()) {
   rhdf5::h5writeAttribute(Spec_ls$MODULE, H5Data, "MODULE")
   rhdf5::h5writeAttribute(Spec_ls$NAVALUE, H5Data, "NAVALUE")
   rhdf5::h5writeAttribute(Spec_ls$UNITS, H5Data, "UNITS")
+
+  if (!is.null(Spec_ls$MODULE_UNITS) ) {
+    rhdf5::h5writeAttribute(Spec_ls$MODULE_UNITS, H5Data, "MODULE_UNITS")
+  } else {
+    rhdf5::h5writeAttribute("NA", H5Data, "MODULE_UNITS")
+  }
   rhdf5::h5writeAttribute(Size, H5Data, "SIZE")
   rhdf5::h5writeAttribute(Spec_ls$TYPE, H5Data, "TYPE")
   if (!is.null(Spec_ls$PROHIBIT)) {
@@ -1743,6 +1753,7 @@ setInDatastore <- function(Data_ls, ModuleSpec_ls, ModuleName, Year, Geo = NULL,
       ComplexTypes_ <- names(Types())[!(names(Types()) %in% SimpleTypes_)]
       if (Type %in% ComplexTypes_) {
         FromUnits <- Spec_ls$UNITS
+        Spec_ls$MODULE_UNITS <- FromUnits # Save unconverted units for storage in writeToTable
         # message("Converting ",FromUnits," for ",Table,"/",Name," for ",paste(Years_ls,collapse=","))
         Conversion_ls <- convertUnits(Data_, Type, FromUnits, Years=Years_ls)
         Data_ <- Conversion_ls$Values
@@ -1845,6 +1856,7 @@ inputsToDatastore <- function(Inputs_ls, ModuleSpec_ls, ModuleName, envir=modelE
           #Modify units spec to reflect units consistent with defaults for
           #datastore
           Spec_ls$UNITS <- Units_ls[[Name]]
+          Spec_ls$MODULE_UNITS <- Spec_ls$UNITS
           writeToTable(SortData_df[[Name]], Spec_ls, "Global",envir=envir)
           rm(Spec_ls)
         }
@@ -1857,6 +1869,7 @@ inputsToDatastore <- function(Inputs_ls, ModuleSpec_ls, ModuleName, envir=modelE
           #Modify units spec to reflect units consistent with defaults for
           #datastore
           Spec_ls$UNITS <- attributes(Data_)$UNITS
+          Spec_ls$MODULE_UNITS <- Spec_ls$UNITS
           writeToTable(Data_, Spec_ls, "Global",envir=envir)
         }
       }
@@ -1878,6 +1891,7 @@ inputsToDatastore <- function(Inputs_ls, ModuleSpec_ls, ModuleName, envir=modelE
         #Modify units spec to reflect units consistent with defaults for
         #datastore
         Spec_ls$UNITS <- Units_ls[[Name]]
+        Spec_ls$MODULE_UNITS <- Spec_ls$UNITS
         writeToTable(SortData_df[[Name]], Spec_ls, Year,envir=envir)
         rm(Spec_ls)
       }
@@ -1905,6 +1919,7 @@ inputsToDatastore <- function(Inputs_ls, ModuleSpec_ls, ModuleName, envir=modelE
           #Modify units spec to reflect units consistent with defaults for
           #datastore
           Spec_ls$UNITS <- Units_ls[[Name]]
+          Spec_ls$MODULE_UNITS <- Spec_ls$UNITS
           writeToTable(SortData_df[[Name]], Spec_ls, Year,envir=envir)
           rm(Spec_ls)
         }
@@ -2065,8 +2080,7 @@ copyDatastore <- function( ToDir, Flatten=TRUE, DatastoreType=NULL, envir=modelE
     assignDatastoreFunctions(envir=writeDS)
     
     # Create the required basic elements: Datastore structure and geography from the source
-    # Do this rather than copying to ensure that the DatastoreListing
-    # is correct
+    # Do this rather than copying to ensure that the DatastoreListing is correct
     initDatastore(envir=writeDS)          # Create core datastore structure
     initDatastoreGeography(envir=writeDS) # Create basic geography tables
 

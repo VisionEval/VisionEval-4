@@ -174,7 +174,8 @@ default.parameters.table = list(
   RunParamFile = "run_parameters.json",
   GeoFile = "geo.csv",
   GeoFileGeometry = "geometry", # created by st_read if GeoFile is a spatial format
-  GeoFileFields = c(Marea="Marea",Azone="Azone",Bzone="Bzone",Czone="Czone"), # names are required geography; value is name in GeoFile
+  GeoFileFields = c(Marea="Marea",Azone="Azone",Bzone="Bzone",Czone="Czone"),
+  # names are names in GeoFile; value is the required name (so do "County='Azone' when setting up)
   GeoFileExtraFields = character(0),
   UnitsFile = "units.csv",
   DeflatorsFile = "deflators.csv",

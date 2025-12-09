@@ -457,7 +457,7 @@ ve.exporter.write <- function(Data, Table, Scenario=NULL, Group=NULL, Metadata=N
 
 ve.exporter.list <- function(names=NULL, namesOnly=TRUE) {
   # namesOnly is intended for interactive use to list out the tables in the export (as written)
-  # if this function is used internally, set namesOnly to False, or if it's really deeply
+  # if this function is used internally, set namesOnly to FALSE, or if it's really deeply
   #   internal, just access self$TableList (the "metadata")
   if ( is.null(self$TableList) ) { # Nothing has been exported yet
     return("Nothing exported yet")

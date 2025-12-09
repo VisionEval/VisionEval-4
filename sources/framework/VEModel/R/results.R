@@ -305,32 +305,48 @@ ve.resultslist.select <- function(selection) {
   invisible( self$selection )
 }
 
-# List out the units applied to results for this scenario (see addDisplayUnits above)
+# List out the units applied to results for this scenario (see addDisplayUnits below)
 ve.resultslist.units <- function(selected=TRUE,display=NULL) {
-  # if display==TRUE, show DisplayUnits plus Datastore Units
-  # if display==FALSE, show only Datastore units
-  # if display is NULL (default) merge Display and Datastore and show source
+  # if display==TRUE, show separate columns for (Datastore) Units, DisplayUnits, and ModuleUnits (if present)
+  # if display==FALSE, show only raw Datastore units (usually won't want that)
+  # if display is NULL (default) only show Units column (set to ModuleUnits or DisplayUnits if present) and include Source
   # selected == FALSE shows units for ALL fields, not just selected
   # Transiently attaches DisplayUnits to field list (transient because user
   #   may be editing the file in this session)
   # Displays a data.frame for the selected (TRUE) or all (FALSE) fields with
   #   Group, Table, Name, DisplayUnits, UnitsSource ("Datastore" or DisplayUnitsFilePath)
   selected <- if ( selected ) self$selection$selection else 1:nrow(self$resultsIndex)
-  Units_df <- self$resultsIndex[ selected, c("Scenario","Group","Table","Name","Units") ]
+  Units_df <- self$resultsIndex[ selected, c("Scenario","Group","Table","Name","Units","ModuleUnits") ]
   Units_df$Source <- "Datastore"
   returnFields <- c("Scenario","Group","Table","Name","Units","Source")
   if ( ! is.logical(display) || display ) {
     # Add Display Units if requested
     Units_df <- addDisplayUnits(Units_df,Param_ls=self$RunParam_ls)
     displayUnits <- !is.na(Units_df$DisplayUnits) # find elements where DisplayUnits are available
-    Units_df$Source[ displayUnits ] <- basename(Units_df$DisplayUnitsFile[ displayUnits ])
-    if ( is.null(display) ) {
-      # merge into single Units Column
+    # Report list of units provided by Modules
+    hasModuleUnits <- "ModuleUnits" %in% names(Units_df)
+    if ( ! is.logical(display) ) {
+      # replace Units Column with ModuleUnits or DisplayUnits, and don't return those
       Units_df$Units[ displayUnits ] <- Units_df$DisplayUnits[ displayUnits ]
+      Units_df$Source[ displayUnits ] <- basename(Units_df$DisplayUnitsFile[ displayUnits ])
+      if ( hasModuleUnits ) {
+        useModuleUnits <- (
+          ( ! displayUnits ) &
+          ! is.na(Units_df$ModuleUnits[!displayUnits]) &
+          ( is.na(Units_df$Units[!displayUnits]) |
+            Units_df$Units[!displayUnits] != Units_df$ModuleUnits[!displayUnits]
+          )
+        )
+        Units_df$Units[ useModuleUnits ] <- Units_df$ModuleUnits[ useModuleUnits ]
+        Units_df$Source[ useModuleUnits ] <- "ModuleUnits"
+      }
     } else {
+      # Units field will contain Datastore Units; don't return Source
+      if ( hasModuleUnits ) returnFields <- c(returnFields,"ModuleUnits")
       returnFields <- c(returnFields,"DisplayUnits")
     }
   }
+  row.names(Units_df) <- NULL
   return( Units_df[,returnFields] )
 }
 
@@ -421,9 +437,19 @@ ve.results.extract <- function(
   scenarioName <- if ( is.null(self$modelStage) ) basename(self$resultsPath) else self$modelStage$Name
 
   if ( convertUnits) {
+    # TODO: if ModuleUnits is present in selection, use those instead of the Datastore Units
+    hasModuleUnits <- "ModuleUnits" %in% names(selection) # Older model runs won't have ModuleUnits
+    message("Using ModuleUnits for ",scenarioName,": ",hasModuleUnits)
+    if ( hasModuleUnits ) selection$DisplayUnits <- selection$ModuleUnits
+    # Even if using ModuleUnits, can still override with DisplayUnits if those are defined somewhere
     selection <- addDisplayUnits(selection,Param_ls=self$RunParam_ls)
+    if ( hasModuleUnits ) {
+      useModuleUnits <- is.na(selection$DisplayUnits) & selection$Units != selection$ModuleUnits
+      selection$DisplayUnits[useModuleUnits] <- selection$ModuleUnits[useModuleUnits]
+      selection$DisplayUnits[is.na(selection$DisplayUnits)] <- selection$Units[is.na(selection$DisplayUnits)]
+    }
   } else {
-    selection$DisplayUnits <- selection$Units
+    selection$DisplayUnits <- selection$Units # These will be the Datastore units
   }
   if ( ! "Scenario" %in% names (selection ) ) { # Should be redundant, and Scenario if present should be unique
     selection <- cbind(Scenario=scenarioName,selection)
@@ -445,8 +471,8 @@ ve.results.extract <- function(
       Metadata[[table]] <- selection[ selection$Group==group & selection$Table==table, ]
       fields <- Metadata[[table]][ , c("Name","DisplayUnits") ]
 
-      # set up unit conversion...
-      dispUnits <- fields$DisplayUnits # Will already be fields$Units if not converting
+      # set up unit conversion... if dispUnits is NA, extraction will use Datastore units
+      dispUnits <- fields$DisplayUnits # May contain ModuleUnits or Units (see above)
       names(dispUnits) <- fields$Name
       Tables_ls[[table]] <- dispUnits
     }
@@ -679,6 +705,7 @@ ve.results.index <- function() {
   Description <- sapply(ds$attributes, attributeGet, "DESCRIPTION",simplify=TRUE) # should yield a character vector
   Module <- sapply(ds$attributes, attributeGet, "MODULE",simplify=TRUE) # should yield a character vector
   Units <- sapply(ds$attributes, attributeGet, "UNITS",simplify=TRUE) # should yield a character vector
+  ModuleUnits <- sapply(ds$attributes, attributeGet, "MODULE_UNITS",simplify=TRUE) # currently the original units when Dataset was created
   InputDir <- sapply(ds$attributes, attributeGet, "INPUTDIR",simplify=TRUE) # should yield a character vector
   InputDir[ is.na(InputDir) ] <- ""
   File <- sapply(ds$attributes, attributeGet, "FILE",simplify=TRUE) # should yield a character vector
@@ -710,6 +737,7 @@ ve.results.index <- function() {
     Description = Description,
     Units       = Units,
     Module      = Module,
+    ModuleUnits = ModuleUnits,
     Scenario    = scenario,
     File        = File,          # "" if not an Input
     InputDir    = InputDir       # "" if not an Input
@@ -737,7 +765,7 @@ ve.results.index <- function() {
 addDisplayUnits <- function(GTN_df,Param_ls) {
   # GTN_df is a data.frame with "Group","Table","Name" rows for each Name/field for which display
   #  units are sought. Always re-open the DisplayUnits file, as it may have changed since the last
-  #  run.
+  #  run. GTN_df may have other columns.
   ParamPath <- visioneval::getRunParameter("ParamPath",Param_ls=Param_ls) # location of structural files
 
   DisplayUnitsFile <- visioneval::getRunParameter("DisplayUnitsFile",Param_ls=Param_ls)
@@ -801,7 +829,9 @@ addDisplayUnits <- function(GTN_df,Param_ls) {
   # Add displayUnitsFile
   displayUnits$DisplayUnitsFile <- DisplayUnitsFile
   # get here with displayUnits being GTN_df, augmented by matching DisplayUnits
-  return(displayUnits) # Minimally includes Group, Table, Name, DisplayUnits, DisplayUnitsFile
+  return(displayUnits)
+  # Minimally includes Group, Table, Name, DisplayUnits, DisplayUnitsFile
+  # May also include Units and ModuleUnits if originally present
 }
 
 # Return a named list of ScenarioElements and Levels for this set of

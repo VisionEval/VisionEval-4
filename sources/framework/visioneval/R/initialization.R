@@ -1424,9 +1424,9 @@ documentModule <- function(ModuleName){
 #' \code{readGeography} a visioneval framework model developer function that reads the
 #' geographic specifications file for the model.
 #'
-#' This function is not used when running a model: it is only intended for debugging geographic
-#' file specifications during model development. See initModelState for identical code that
-#' loads the geography along with units and deflators
+#' This function is not used when running a model: it is only intended for debugging geographic file
+#' specifications during model development. See initModelState for identical code that loads the geography
+#' along with units and deflators. WARNING: has not been updated to use sf_read (geospatial formats)
 #'
 #' This function manages the reading and error checking of geographic specifications for the model.
 #' It calls the checkGeography function to check for errors in the specifications. The
@@ -1467,7 +1467,7 @@ readGeography <- function(Save=TRUE,Param_ls=NULL) {
   if ( is.na(GeoFilePath) || length(GeoFilePath)!=1 ) {
     stop(
       writeLog(
-        paste("Geography File",GeoFile,"does not exist in",ParamPath),
+        paste("Geography File",GeoFile,"is not a single file in",ParamPath),
         Level="error"
       )
     )
@@ -1513,20 +1513,36 @@ readGeography <- function(Save=TRUE,Param_ls=NULL) {
 checkGeography <- function(Geo_df) {
   #Check that file has all required fields and extract field attributes
   #--------------------------------------------------------------------
-  # TODO: add field name mapping using RunParam_ls$GeoFileFields
-  # Do that in two parts: if the GeoFileFields are present, just carry on
-  # Otherwise, see if there is a mapping for the missing ones in GeoFileFields
-  # Also, we can relax about Bzone and Czone as those can be filled with NA
-  FieldNames_ <- c("Azone", "Bzone", "Czone", "Marea")
+
+  # Map the required geography fields: if the GeoFileFields are present, just carry on.
+  # Otherwise, see if there is a mapping for the missing ones in GeoFileFields.
+  # Usually, we want BZone, but for VE-State, Bzone can be all NA (and we'll fill that in below)
+  FieldNames_ <- c("Azone", "Marea")
   missing <- ! (FieldNames_ %in% names(Geo_df))
   if ( any(missing) ) {
-    Message <- paste(attr(Geo_df,"file"),"is missing required fields:",paste(FieldNames_[missing],collapse=", "))
-    writeLog(Message,Level="error")
-    stop(Message)
+    # The names of GeoFileFields are what is in the GeoFile, and the values are the known GeoFileFields (Azone,Bzone,Czone,Marea)
+    subFieldNames <- visioneval::getRunParameter("GeoFileFields",Default=character(0))
+    if ( length(subFieldNames) > 0 ) {
+      subFieldNames <- subFieldNames[ subFieldNames %in% names(Geo_df) ] # ignore user-specified names not present in Geo_df names
+      if ( length(subFieldNames) > 0 ) {
+        names(Geo_df)[names(subFieldNames)] <- subFieldNames
+      }
+    }
+    stillMissing <- ! (FieldNames_ %in% names(Geo_df))
+    if ( any(stillMissing) ) {
+      Message <- paste(attr(Geo_df,"file"),"is missing required fields:",paste(FieldNames_[stillMissing],collapse=", "))
+      writeLog(Message,Level="error")
+      stop(Message)
+    }
   }
   #Check table entries
   #-------------------
+  # Fill in NA Bzone and Czone if those are not provided
+  # Bzones can be left out if running VE-State.
+  # Czones are never used (stub for future higher-resolutiond development).
+  if ( ! "Bzone" %in% names(Geo_df) ) Geo_df$Bzone <- as.character(NA)
   BzoneSpecified <- !all(is.na(Geo_df$Bzone))
+  if ( ! "Czone" %in% names(Geo_df) ) Geo_df$Czone <- as.character(NA)
   CzoneSpecified <- !all(is.na(Geo_df$Czone))
   Messages_ <- character(0)
   #Determine whether entries are correct if Bzones have not been specified
@@ -1537,7 +1553,7 @@ checkGeography <- function(Geo_df) {
         Messages_, paste0(
           "Duplicated Azone entries (",
           paste(DupAzone, collapse = ", "),
-          ") not allowed when Bzones not specified."
+          ") not allowed when Bzones are not specified."
         )
       )
     }
@@ -1556,17 +1572,8 @@ checkGeography <- function(Geo_df) {
       Messages_ <- c(Messages_, paste0(
         "Duplicated Bzone entries (",
         paste(DupBzone, collapse = ", "),
-        ") not allowed."
+        ") are not allowed."
       ))
-    }
-    # Are metropolitan area designations consistent
-    AzoneMareas_ <- tapply(Geo_df$Marea, Geo_df$Azone, unique)
-    AzoneMareas_ <- lapply(AzoneMareas_, function(x) {
-      x[x != "None"]
-    })
-    if (any(unlist(lapply(AzoneMareas_, length)) > 1)) {
-      Messages_ <- c(Messages_,
-        "At least one Azone is assigned more than one Marea.")
     }
   }
   # Determine whether entries are correct if Czones have been specified
@@ -1585,16 +1592,18 @@ checkGeography <- function(Geo_df) {
         ") not allowed."
       ))
     }
-    # Are metropolitan area designations consistent
-    AzoneMareas_ <- tapply(Geo_df$Marea, Geo_df$Azone, unique)
-    AzoneMareas_ <- lapply(AzoneMareas_, function(x) {
-      x[x != "None"]
-    })
-    if (any(unlist(lapply(AzoneMareas_, length)) > 1)) {
-      Messages_ <- c(Messages_,
-        "At least one Azone is assigned more than one Marea.")
-    }
   }
+
+  # Are metropolitan area designations consistent
+  AzoneMareas_ <- tapply(Geo_df$Marea, Geo_df$Azone, unique)
+  AzoneMareas_ <- lapply(AzoneMareas_, function(x) {
+    x[x != "None"]
+  })
+  if (any(unlist(lapply(AzoneMareas_, length)) > 1)) {
+    Messages_ <- c(Messages_,
+      "At least one Azone is assigned more than one Marea.")
+  }
+
   # Return messages and elements for ModelState
   Update_ls <- list(Geo_df = Geo_df, BzoneSpecified = BzoneSpecified,
     CzoneSpecified = CzoneSpecified)
@@ -1649,6 +1658,7 @@ initDatastoreGeography <- function(GroupNames = NULL, envir=modelEnvironment()) 
     TABLE = "Marea",
     TYPE = "character",
     UNITS = "",
+    MODULE_UNITS = "",
     NAVALUE = "NA",
     PROHIBIT = "",
     ISELEMENTOF = "",
@@ -1664,6 +1674,7 @@ initDatastoreGeography <- function(GroupNames = NULL, envir=modelEnvironment()) 
     TABLE = "Azone",
     TYPE = "character",
     UNITS = "",
+    MODULE_UNITS = "",
     NAVALUE = "NA",
     PROHIBIT = "",
     ISELEMENTOF = "",
@@ -1680,6 +1691,7 @@ initDatastoreGeography <- function(GroupNames = NULL, envir=modelEnvironment()) 
       TABLE = "Bzone",
       TYPE = "character",
       UNITS = "",
+      MODULE_UNITS = "",
       NAVALUE = "NA",
       PROHIBIT = "",
       ISELEMENTOF = "",
@@ -1697,6 +1709,7 @@ initDatastoreGeography <- function(GroupNames = NULL, envir=modelEnvironment()) 
       TABLE = "Czone",
       TYPE = "character",
       UNITS = "",
+      MODULE_UNITS = "",
       NAVALUE = "NA",
       PROHIBIT = "",
       ISELEMENTOF = "",
@@ -1707,16 +1720,20 @@ initDatastoreGeography <- function(GroupNames = NULL, envir=modelEnvironment()) 
   }
 
   # closure to create specification list for extra fields
-  # TODO: for starters, ignore (don't save) the geometry field
-  # TODO: The geometry and smallest defined geo field should be saved separately in the Datastore
-  #   Perhaps create a Global/Geometry virtual table that has geometry and Azone or Bzone IDs
-  getExtraGeoFields <- function(Geo_df) {
-    # TODO: only load specified extra fields from GeoFileExtraFields
-    extraFields <- ! names(Geo_df) %in% c("Marea","Azone","Bzone","Czone") # TODO: affirmative present in ExtraFields
+  getExtraGeoFields <- function(Geo_df, extraFields=character(0)) {
+    extraFields <- ! names(Geo_df) %in% c("Marea","Azone","Bzone","Czone")
+    onlyKeepFields <- visioneval::getRunParameter("GeoFileExtraFields",Default=character(0))
+    if ( length(onlyKeepFields) > 0 ) {
+      writeLog(paste("All Extra Fields in GeoFile:",extraFields,collapse=","),Level="info")
+      writeLog(paste("Only Keeping Fields:",onlyKeepFields,collapse=","),Level="info")
+      extraFields <- extraFields[extraFields %in% onlyKeepFields]
+      writeLog(paste("Filtered Extra Fields:",extraFields,collapse=","),Level="info")
+    }
     extraFieldSpecs <- list()
     fieldSpec <- list(
       MODULE = "visioneval",
       UNITS = "",
+      MODULE_UNITS = "",
       NAVALUE = "NA",
       PROHIBIT = "",
       ISELEMENTOF = "",
@@ -1891,18 +1908,19 @@ loadModelParameters <- function(FlagChanges=FALSE,envir=modelEnvironment()) {
       # WARNING: Model parameter TYPE and UNITS are not checked
       Spec_ls <-
       list(
-        NAME    = Param_df$NAME[i],
-        TABLE   = "Model",
-        TYPE    = Type,
-        UNITS   = Param_df$UNITS[i],
-        NAVALUE = ifelse(Param_df$TYPE[i] == "character", "NA", -9999),
-        SIZE    = ifelse(
+        NAME         = Param_df$NAME[i],
+        TABLE        = "Model",
+        TYPE         = Type,
+        UNITS        = Param_df$UNITS[i],
+        MODULE_UNITS = Param_df$UNITS[i],
+        NAVALUE      = ifelse(Param_df$TYPE[i] == "character", "NA", -9999),
+        SIZE         = ifelse(
           Param_df$TYPE[i] == "character",
           nchar(Param_df$VALUE[i]),
           0
         ),
-        LENGTH  = 1,
-        MODULE  = G$Model
+        LENGTH       = 1,
+        MODULE       = G$Model
       )
       result <- writeToTable(Value, Spec_ls, Group = "Global", Index = NULL)
     }
