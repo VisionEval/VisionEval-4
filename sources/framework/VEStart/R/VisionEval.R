@@ -151,9 +151,21 @@ startVisionEval <- function(
   Sys.setenv(VE_HOME=ve.home,VE_RUNTIME=ve.runtime) # Somewhat redundantly, also save to operating system environment
   # NOTE: ve.setup.environ below will also save VE_HOME and VE_RUNTIME into the .Renviron startup file
 
+  # Clear VE.* packages then visioneval itself prior to reloading
+  VEpackages <- grep("package:VE.*",search(),value=TRUE)
+
   # Clear VEModel if already present
   if ( "package:VEModel" %in% search() ) detach("package:VEModel")
   base::unloadNamespace("VEModel")
+
+  # Unload other VE packages that may still be hanging around from a
+  # previous build or run in the same session (but not VEStart)
+  loadedPackages <- search()
+  toDetach <- grepl("^package:VE",loadedPackages) & loadedPackages != "package:VEStart"
+  sapply(rev(which(toDetach)),function(p) detach(pos=p))
+  loadedVE <- loadedNamespaces() # in order of first loaded to last loaded
+  toUnload <- loadedVE[grepl("^VE",loadedVE) & loadedVE != "VEStart"]
+  sapply(rev(toUnload),unloadNamespace)
 
   # Clear visioneval so we can update it too
   if ( "package:visioneval" %in% search() ) detach("package:visioneval")
