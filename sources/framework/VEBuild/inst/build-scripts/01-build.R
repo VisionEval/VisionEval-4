@@ -20,18 +20,27 @@ script.contents <- c(
 # Build instructions
 build.instructions.builder <- function() {
   build.finished <- "VEStart" %in% utils::installed.packages(lib.loc=ve.env$ve.lib)[,"Package"] 
-  paste( collapse="\n", c(
-    "ve.setup() to select VE_BUILD and VE_RUNTIME prior to (re-)building (optional)",
-    paste0("  VE_BUILD is currently ",ve.build.dir),
-    if ( ! build.finished ) paste0("  VE_RUNTIME is currently ",ve.runtime) else NULL,
-    if ( ! build.finished ) paste0("ve.build() to build a full VisionEval installation into ",ve.lib) else {
-      paste0("ve.build() to rebuild updated packages into ",ve.lib)
-    },
-    if ( build.finished ) paste0("ve.build(<packages>,reset=TRUE) to rebuild specific <packages> or all of them"),
-    if ( build.finished ) {
-      paste0("ve.run() to start VisionEval in VE_RUNTIME: ",ve.runtime)
-    } else NULL
-  ) )
+  paste(
+    collapse="\n",
+    c(
+      "ve.setup() to select VE_BUILD and VE_RUNTIME prior to (re-)building (optional)",
+      paste0("  VE_BUILD is ",ve.build.dir),
+      if ( build.finished ) {
+        c(
+          paste0("  VE_RUNTIME is ",ve.runtime,"\n"),
+          paste0("ve.build() to rebuild updated packages into ",ve.lib),
+          "ve.build(<packages>,reset=TRUE) to rebuild <packages> (vector of names)",
+          "ve.build(reset=TRUE) to rebuild everyting",
+          "ve.run() to start VisionEval"
+        )
+      } else {
+        c(
+          paste0("  VE_RUNTIME will be ",ve.runtime),
+          paste0("ve.build() to build a full VisionEval installation into ",ve.lib)
+        )
+      }
+    )
+  )
 }
 
 # Issue any logged instructions (see build.instructions.builder above, or build.instructions.installer)
@@ -58,7 +67,7 @@ ve.locations <- function(all=FALSE) {
     message("\nSet the following by editing .Renviron in VE_RUNTIME:")
     message("  VE_CRAN_MIRROR=",Sys.getenv("VE_CRAN_MIRROR","https://cloud.r-project.org"))
     tmp.root <- Sys.getenv("VE_ROOT",NA)
-    if ( ! is.na(tmp.root) ) message("  VE_ROOT=",tmp.root)
+    if ( ! is.na(tmp.root) ) message("  VE_ROOT=",tmp.root) else message("  VE_ROOT is not set")
     message("  VE_SOURCE=",ve.sources)
     ve.inst <- Sys.getenv("VE_INSTALL",ve.home) # VE_INSTALL is a "secondary" VE_HOME for trying installer locally
     if ( ve.inst != ve.home ) message("  VE_INSTALL=",ve.inst) else message("  VE_INSTALL is not set")
@@ -851,12 +860,20 @@ ve.build.one.package <- function(pkg,reset=FALSE,check=TRUE,debug=0) {
 }
 
 #' @param ve.runtime Directory to override standard runtime location search
-ve.run <- function(ve.runtime=NULL,setupHome=FALSE) {
+ve.run <- function(ve.runtime=NULL,setupHome=FALSE,overwrite=FALSE) {
   if ( ! suppressMessages(require(VEStart,quietly=TRUE)) ) {
     stop("VEStart is not available - have you run ve.build()?")
   }
   ve.env <- try( silent=TRUE, as.environment("ve.env") )
   if ( ! is.environment(ve.env) ) stop("VisionEval environment is unavailable; please restart")
+
+  # Recover from walkthrough if that's active:
+  if ( exists("orig.runtime",envir=ve.env,inherits=FALSE) ) {
+    ve.env$ve.runtime <- ve.env$orig.runtime
+    rm("orig.runtime",envir=ve.env)
+  }
+
+  # set up remaining runtime configuration
   existing.runtime <- missing(ve.runtime) || is.null(ve.runtime)
   if ( existing.runtime ) {
     if ( exists("ve.runtime",ve.env,inherits=FALSE) ) {
@@ -873,7 +890,7 @@ ve.run <- function(ve.runtime=NULL,setupHome=FALSE) {
 
   # startVisionEval will unload VEModel and visioneval
   # it will also create or update .Renviron in ve.runtime
-  VEStart::startVisionEval(ve.runtime=ve.runtime,setupHome=setupHome)
+  VEStart::startVisionEval(ve.runtime=ve.runtime,setupHome=setupHome,overwrite=overwrite)
 }
 
 # \code{makeGitInfo} gets Git repository information for folder \code{from} if that
@@ -1138,6 +1155,13 @@ ve.setup <- function() {
         paste0("VE_RUNTIME=",locations["VE_RUNTIME"])
       )
       writeLines(renv.txt,renv.file)
+
+      # Update "live" VE environment
+      if ( ve.env$ve.runtime != locations["VE_RUNTIME"] && ve.env$ve.runtime==getwd() ) {
+        message("Do ve.run() to move to the new VE_RUNTIME location")
+      }
+      ve.env$ve.runtime <- as.character(locations["VE_RUNTIME"]) # as.character strips off the names attribute
+      ve.env$ve.build.dir <- as.character(locations["VE_BUILD"])
     }
   }
 }
@@ -1292,7 +1316,8 @@ ve.setup.dialog <- function(ve.build.dir, ve.runtime) {
 #   # TODO: Only available after doing ve.build(). Will call ve.run() to start
 #   # TODO: simpler runtime handling:
 #   # TODO: Look for "walkthrough" subdirectory of VE_RUNTIME and create/populate it from VEModel
-#   # TODO: Where to find walkthrough scripts depends on whether we are loading VEModel or some other package
+#   # TODO: Only do "walkthrough" with VEModel if no other package provided
+#   # TODO: if VEModel is selected explicitly, do its tests rather than the walkthrough
 #   walkthroughScripts = character(0)
 #   if ( missing(VEPackage) || tolower(VEPackage)=="walkthrough" ) { # load the walkthrough
 #     # TODO: figure out where to get "walkthrough" files

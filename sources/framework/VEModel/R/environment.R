@@ -116,7 +116,6 @@ runtimeEnvironment <- function(ve.new.env=NULL) {
 #' @return None
 #' @export
 initVisionEval <- function() {
-  message("Loading VisionEval 4.0!")
   ve.env <- runtimeEnvironment()      # establish VEModel environment (possibly set up externally by VEStart)
   getSetup(reload=TRUE)               # reload global RunParam_ls; also will align with ve.env$ve.runtime
   ModelRoot <- getModelDirectory()    # Full path built from ve.runtime and global visioneval.cnf model directory name
@@ -124,6 +123,7 @@ initVisionEval <- function() {
     message("Creating runtime '",basename(ModelRoot),"' directory")
     dir.create(ModelRoot,recursive=TRUE,showWarnings=FALSE)
   }
+  message("Welcome to VisionEval 4.0!")
   message("Running in ",ve.env$ve.runtime)
   setwd(ve.env$ve.runtime)
   NULL
@@ -645,3 +645,14 @@ showModelIndex <- function(reset=FALSE, private=FALSE) {
   return( as.data.frame(modelSources) )
 }
 
+# INITIALIZE WALKTHROUGH
+#' Establish a temporary runtime to try out walkthrough operations and load VEModel
+#' Takes no parameters and sets up a working environment (adjusting ve.runtime)
+#' @return NULL
+#' @export
+ve.walkthrough <- function(reset=FALSE) {
+  wkthru.start <- system.file("walkthrough/00-setup.R",package="VEModel")
+  source(wkthru.start)
+  setup.walkthrough(reset)
+  utils::browseURL(system.file("walkthrough",package="VEModel"))
+}

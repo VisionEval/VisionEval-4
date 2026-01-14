@@ -1,6 +1,5 @@
 # 04-scenarios.R
 # Tour the scenario sample models and explain how to set up scenarios
-#   and query the scenario results
 
 require(VEModel)
 
@@ -28,12 +27,13 @@ mod.scenarios$dir(scenarios=TRUE,all.files=TRUE) # Look at the elements of the s
 # The visioneval.cnf configuration defines the base model
 # the scenarios\visioneval.cnf file defines additional scenarios
 # Setting up scenarios is beyond the scope of this walkthrough
-# See https://github.visioneval.io/docs for more information
+# See https://visioneval.org/docs for more information
 
 # Run the model
 
-# mod.scenarios$plan(workers=3) # Use three cores to run scenarios in parallel
-# RAM, not number of CPUs, is the limiting factor on efficiency.
+# mod.scenarios$plan(workers=3)  # Uncomment to use three cores to run scenarios in parallel
+# RAM, not number of CPUs, is the limiting factor on how many cores can run in parallel.
+
 mod.scenarios$run()
 
 # Check that everything ran correctly

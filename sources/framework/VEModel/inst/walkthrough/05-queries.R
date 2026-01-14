@@ -21,7 +21,7 @@ mod.scenarios <- if ( "VERSPM-scenarios" %in% dir("models") ) {
 mod.scenarios$plan(workers=3)     # Adjust how many based on CPUs and RAM available
 mod.scenarios$run()               # will do nothing if you already ran the model
 print(mod.scenarios,details=TRUE) # without 'details' just says how many scenarios...
-mod.scenarios$clear(outputOnly=TRUE,force=TRUE)
+mod.scenarios$clear(outputOnly=TRUE,force=TRUE) # clears exports and query results immediately, but keeps base results
 
 #######################
 # BASIC QUERY OPERATION
@@ -71,7 +71,7 @@ mod.scenarios$dir(output=TRUE)
 # EXPORTING QUERIES
 ###################
 
-# Export (instead of, or in addition to, extract) to generate a file with the query
+# Use export (instead of, or in addition to, extract) to generate a file with the query
 # results. The export works the same as exporting the raw data, except that the partition is
 # ignored and you get a single table (either "Long" or "Wide" format)
 
@@ -80,16 +80,22 @@ mod.scenarios$dir(output=TRUE)
 qry$export() # Default CSV file name in output directory
 mod.scenarios$dir(outputs=TRUE,all.files=TRUE) # Now we have output in a .csv file
 
-# "Long" format creates one row per metric per scenario, a format that plays
-# nicely with Tableau or other external analysis tools.
+# "Long" format creates one row per metric per scenario
+# The scenario is just another field in the output row.
+# This format that plays nicely with Tableau or other external analysis tools.
 qry$export(longScenarios=TRUE) # Default CSV file name in output directory
 
 qry$export("sqlite") # Put the query extraction into an SQLite Database
+# qry$export("sqlite",longScenarios=TRUE) # if you want the long format in the exported database
 
 # Or put the query results into Excel directly:
 qry$export("data.frame")$data(
   format=writexl::write_xlsx,
   path=file.path(mod.scenarios$exportPath(),"Query-Output.xlsx")
 )
-# if you were paying close attention before, you don't need the "formatList" parameter for
-# Excel output here because query export generates a single data.frame in each case.
+# if you were paying close attention in the advanced export, you don't
+# need the "formatList" parameter for Excel output here because query
+# export generates a single data.frame in each case. Exporting
+# detailed results rather than queries does require formatList=TRUE to
+# engage internal processing to make each table a tab in the
+# spreadsheet.

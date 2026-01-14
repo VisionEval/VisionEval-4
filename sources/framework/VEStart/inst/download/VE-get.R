@@ -7,4 +7,4 @@
 
 # The website has the following code, and the script lives in visioneval.github.io/assets/install
 # Keep the assets/install version of VE4-install.R up to date with this file in VEStart/inst/download
-source("https://visioneval.github.io/assets/install/VE4-install.R")
+source(ve.url<-"https://visioneval.github.io/assets/install/VE4-install.R")

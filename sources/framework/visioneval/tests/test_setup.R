@@ -1,5 +1,5 @@
 # Test.R
-# Comprehensively test VEModel and related interfaces
+# Comprehensively test visioneval, VEModel and related interfaces
 # Also provides working examples of the API
 
 # You should run this from the visioneval package root.

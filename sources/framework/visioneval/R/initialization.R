@@ -745,11 +745,7 @@ parseModuleCalls <- function( ModuleCalls_df, AlreadyInitialized=character(0), R
       next()
     }
     #Load and check the module specifications
-    ## DEBUG
-    ## writeLog(paste(PackageName,ModuleName,sep="::"),Level="warn")
     Specs_ls <- processModuleSpecs(getModuleSpecs(ModuleName, PackageName, AllSpecs_ls=AllSpecs_ls, Instance=Instance))
-    ## DEBUG
-    ## print(paste("Get Spec length:",length(Specs_ls$Get)))
     Err <- checkModuleSpecs(Specs_ls, ModuleName)
     if (length(Err) > 0) {
       Errors_ <- c(Errors_, Err)
@@ -841,13 +837,6 @@ parseModuleCalls <- function( ModuleCalls_df, AlreadyInitialized=character(0), R
       stop(Msg," Check log for details")
     }
   }
-  ## DEBUG
-  # for ( mod in names(AllSpecs_ls) ) {
-  #   print(paste(mod,length(AllSpecs_ls[[mod]]$Spec$Get)))
-  #   if ( grepl('CreateHouseholds',mod) ) {
-  #     print(sapply(AllSpecs_ls[[mod]]$Spec$Get,function(s)s$NAME))
-  #   }
-  # }
   setModelState(list(AllSpecs_ls=AllSpecs_ls),Save=Save)
   return(invisible(AllSpecs_ls))
 }

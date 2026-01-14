@@ -437,13 +437,12 @@ ve.results.extract <- function(
   scenarioName <- if ( is.null(self$modelStage) ) basename(self$resultsPath) else self$modelStage$Name
 
   if ( convertUnits) {
-    # TODO: if ModuleUnits is present in selection, use those instead of the Datastore Units
-    hasModuleUnits <- "ModuleUnits" %in% names(selection) # Older model runs won't have ModuleUnits
-    message("Using ModuleUnits for ",scenarioName,": ",hasModuleUnits)
-    if ( hasModuleUnits ) selection$DisplayUnits <- selection$ModuleUnits
-    # Even if using ModuleUnits, can still override with DisplayUnits if those are defined somewhere
+    # addDisplayUnits will add ModuleUnits if those are present and no DisplayUnitsFile overrides
+    # See addDisplayUnits below
     selection <- addDisplayUnits(selection,Param_ls=self$RunParam_ls)
-    if ( hasModuleUnits ) {
+    if ( "ModuleUnits" %in% names(selection) ) {
+      missingModuleUnits <- is.na(selection$ModuleUnits)
+      selection$ModuleUnits[missingModuleUnits] <- selection$Units[missingModuleUnits]
       useModuleUnits <- is.na(selection$DisplayUnits) & selection$Units != selection$ModuleUnits
       selection$DisplayUnits[useModuleUnits] <- selection$ModuleUnits[useModuleUnits]
       selection$DisplayUnits[is.na(selection$DisplayUnits)] <- selection$Units[is.na(selection$DisplayUnits)]
@@ -468,6 +467,7 @@ ve.results.extract <- function(
     Metadata <- list()
     for ( table in tables ) {
       # get table Metadata
+      # TODO: Note that metadata does not vary across Scenarios, but perhaps should
       Metadata[[table]] <- selection[ selection$Group==group & selection$Table==table, ]
       fields <- Metadata[[table]][ , c("Name","DisplayUnits") ]
 
@@ -482,7 +482,6 @@ ve.results.extract <- function(
     if ( ! is.list(Data_ls) ) stop("Data_ls is not a list")
 
     # Report Missing Tables from readDatastoreTables
-    writeLog("Checking for Missing Tables",Level="warn")
     HasMissing_ <- unlist(lapply(Data_ls$Missing, length)) != 0
     if (any(HasMissing_)) {
       WhichMissing_ <- which(HasMissing_)
@@ -509,7 +508,6 @@ ve.results.extract <- function(
     # Handle tables with different lengths of data elements ("multi-tables")
     # readDatastoreTables will have returned a ragged list rather than a data.frame
 
-    writeLog("Checking multitables...",Level="warn")
     if ( ! all(is.df <- sapply(Data_ls$Data,is.data.frame)) ) {
       # Unpack "multi-tables"
       MultiTables <- Data_ls$Data[which(! is.df)] # usually, there's just one of these...
@@ -562,7 +560,6 @@ ve.results.extract <- function(
       }
     )
     # Make sure Metadata includes added column descriptions
-    writeLog("Fixing up Metadata column descriptions",Level="warn")
     Metadata <- lapply(names(Metadata),function(tbl) {
       dfm <- Metadata[[tbl]]
       rnames <- names(dfm)
@@ -762,12 +759,25 @@ ve.results.index <- function() {
 }
 
 # Helper function to attach DisplayUnits to a list of Group/Table/Name rows in a data.frame
+# Return the amended data.frame
 addDisplayUnits <- function(GTN_df,Param_ls) {
   # GTN_df is a data.frame with "Group","Table","Name" rows for each Name/field for which display
   #  units are sought. Always re-open the DisplayUnits file, as it may have changed since the last
   #  run. GTN_df may have other columns.
-  ParamPath <- visioneval::getRunParameter("ParamPath",Param_ls=Param_ls) # location of structural files
 
+  # Initialize DisplayUnits field from ModuleUnits if present, otherwise Units
+  hasModuleUnits <- "ModuleUnits" %in% names(GTN_df) # Older model runs won't have ModuleUnits
+  if ( hasModuleUnits ) {
+    message("Defaulting export units to ModuleUnits")
+    GTN_df$DisplayUnits <- GTN_df$ModuleUnits
+  } else if ( "Units" %in% names(GTN_df) ) {
+    GTN_df$DisplayUnits <- GTN_df$Units
+  } else {
+    GTN_df$DisplayUnits <- NA
+  }
+
+  # Locate DisplayUnits to override Units/Module units, if available
+  ParamPath <- visioneval::getRunParameter("ParamPath",Param_ls=Param_ls) # location of structural files
   DisplayUnitsFile <- visioneval::getRunParameter("DisplayUnitsFile",Param_ls=Param_ls)
   # Where to look for DisplayUnitsFile...
   # By its name, in ParamPath for model (preferred) or runtime directory (global values)
@@ -778,14 +788,13 @@ addDisplayUnits <- function(GTN_df,Param_ls) {
     writeLog( Level="info",
       c("Specified DisplayUnits file does not exist (using default units):",paste(DisplayUnitsFile,collapse="; "))
     )
-    return( cbind(GTN_df,DisplayUnits=NA,DisplayUnitsFile="None") )
-  } else {
-    DisplayUnitsFile <- DisplayUnitsFile[existing][1]
+    return( cbind(GTN_df,DisplayUnitsFile="None") ) # DisplayUnits default field already there
   }
-#   cat("DisplayUnitsFile:\n")
-#   print(DisplayUnitsFile)
+
+  # Remainder of this function attempts to load and use DisplayUnits override
+  DisplayUnitsFile <- DisplayUnitsFile[existing][1]
   displayUnits <- try(utils::read.csv(DisplayUnitsFile),silent=TRUE)   # May fail for various reasons
-  if ( ! inherits(displayUnits,"data.frame") ) {
+  if ( ! inherits(displayUnits,"data.frame") ) { # file was unreadable
     writeLog( Level="warn",
       c(
         "Error reading DisplayUnits file:",
@@ -793,8 +802,9 @@ addDisplayUnits <- function(GTN_df,Param_ls) {
         paste("Error:",conditionMessage(attr(displayUnits,"condition")))
       )
     )
-    return( cbind(GTN_df,DisplayUnits=NA, DisplayUnitsFile="None") )
+    return( cbind(GTN_df,DisplayUnitsFile="None") )
   }
+
   displayColumns <- c("Group","Table","Name","DisplayUnits")
   if ( ! all( displayColumns %in% names(displayUnits) ) ) {
     writeLog( Level="warn",
@@ -802,36 +812,19 @@ addDisplayUnits <- function(GTN_df,Param_ls) {
         paste("Columns:",names(displayUnits),collapse=", ")
       )
     )
-    return( cbind(GTN_df,DisplayUnits=NA, DisplayUnitsFile="None") )
+    return( cbind(GTN_df,DisplayUnitsFile="None") )
   }
-  # Remove existing DisplayUnits, if present, prior to merging
-  if ( "DisplayUnits" %in% names(GTN_df) ) GTN_df <- GTN_df[,! grepl("DisplayUnits",names(GTN_df),fixed=TRUE)]
-  # Only look at relevant columns in displayUnits when merging
-  displayUnits <- try( merge(GTN_df,displayUnits[,displayColumns],by=c("Group","Table","Name"),all.x=TRUE), silent=TRUE )
-  if (
-    ! inherits(displayUnits,"data.frame") ||
-    ! all( c("Group","Table","Name","DisplayUnits") %in% names(displayUnits) ) # it can have other fields, e.g. original Units
-  ) {
-    if ( inherits(displayUnits,"data.frame") ) {
-      displayUnits <- paste("Bad Fields - ",names(displayUnits),collapse=", ")
-    } else {
-      displayUnits <- conditionMessage(attr(displayUnits,"condition"))
-    }
-    writeLog( Level="warn",
-      c(
-        "Error reading DisplayUnits file:",
-        DisplayUnitsFile,
-        paste("Error:",displayUnits)
-      )
-    )
-    return( cbind(GTN_df,DisplayUnits=NA, DisplayUnitsFile="None") )
+
+  # Iterate through the display units file, looking up entries in GTN_df that
+  # match the individual display unit record and replacing DisplayUnits.
+  for ( r in 1:nrow(displayUnits) ) {
+    du <- displayUnits[r,]
+    gtn.rows <- which(GTN_df$Group==du$Group & GTN_df$Table==du$Table & GTN_df$Name==du$Name)
+    GTN_df$DisplayUnits[gtn.rows] <- du$DisplayUnits
+
   }
-  # Add displayUnitsFile
-  displayUnits$DisplayUnitsFile <- DisplayUnitsFile
-  # get here with displayUnits being GTN_df, augmented by matching DisplayUnits
-  return(displayUnits)
-  # Minimally includes Group, Table, Name, DisplayUnits, DisplayUnitsFile
-  # May also include Units and ModuleUnits if originally present
+
+  return( cbind(GTN_df,DisplayUnitsFile=DisplayUnitsFile) )
 }
 
 # Return a named list of ScenarioElements and Levels for this set of

@@ -64,6 +64,12 @@ loadRuntimeEnvironment <- function() { # Keep this synchronized with VE-Bootstra
   # Set up ve-lib to contain the built R packages that comprise VisionEval
   this.R <- paste(c(R.version["major"],R.version["minor"]),collapse=".")
   two.digit.R <- tools::file_path_sans_ext(this.R)
+  # NOTE: Watch out! Your original VE_HOME/ve-lib will be ignored in favor of
+  # VE_INSTALL/ve-lib so you'll screw up the build and run cycle if that's set before the
+  # code is stable and the installers bui.t.
+  # Finish the build/run cycle, make an installer, then set VE_INSTALL to test the
+  # installers. If you find something wrong in the code, unset VE_INSTALL and restart the
+  # development environment to go back to using VE_HOME/ve-lib
   ve.env$ve.lib <- file.path(Sys.getenv("VE_INSTALL",ve.env$ve.home),ve.lib.name,two.digit.R)
   if ( ! dir.exists(ve.env$ve.lib) ) {
     dir.create(ve.env$ve.lib,recursive=TRUE)

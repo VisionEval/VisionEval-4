@@ -9,10 +9,12 @@ require(VEModel)
 ##########################
 
 # Eliminate everything other than possible pre-existing VERSPM-run
-message("Creating model environment")
-if ( ! dir.exists("models") ) {
-  dir.create("models")
-}
+message("Model environment ",
+  if ( ! dir.exists("models") ) {
+    dir.create("models")
+    "created."
+  } else "exists."
+)
 
 # Here's how to install and run a model in a script
 # See below for some details on opening and investigating a model
@@ -43,8 +45,8 @@ installModel()
 # This instruction will show variants of VERSPM
 installModel("VERSPM",var="") # "var" is short for "variant" - you can spell it out
 
-# Find out what models you already have
-dir("models") # Setup.R already installed and ran "VERSPM-run" (using the "pop" variant)
+# Find out what models you already have insalled
+dir("models") # Installed and ran base variant of VERSPM as "VERSPM-run" earlier
 
 # Install the base variant as "VERSPM" (with a confirm dialog)
 # If you install with no variant listed (as opposed to variant="") it will install the default
@@ -57,28 +59,28 @@ dir("models")
 # Note that the installed name includes the variant: VERSPM-base and VERSPM-run
 
 # Install some additional models (Enter "y" plus "Enter" when prompted)
-# Multi-stage version as "VERSPM-pop" (same model as VERSPM-run above)
-pop <- installModel("VERSPM",variant="pop")
-# VERPAT base variant, using a name we chose (the 'modelPath' parameter)
-rpat <- installModel("VERPAT",modelPath="MYRPAT",confirm=FALSE) # VERPAT base variant, but with name we chose
+# Multi-stage version as "VERSPM-pop" (same model as VERSPM-run above but organized differently)
+pop <- installModel("VERSPM",variant="pop",confirm=FALSE)
+state <- installModel("VE-State",confirm=FALSE) # if variant is not provided, use "base"
 
 # See what we've got
-message('\nExpect to see: "MYRPAT", "VERSPM-base", "VERSPM-pop", and "VERSPM-run"')
+message('\nExpect to see: "VE-State-Base", "VERSPM-base", "VERSPM-pop" and "VERSPM-run"')
 openModel()
 
 # Installed these models:
 # Once a model is loaded you can 'print' it to get information about it
 message("\nVERSPM-pop:")
 print(pop)
-message("\nVERPAT-base:")
-print(rpat)
-rm(pop,rpat)
+message("\nVE-State-base:")
+print(state)
+rm(pop,state)
 
 # If you install a model again under the same name, it will add a number to it
 installModel("VERSPM",confirm=FALSE) # base model again
-message('\nExpect to see:")
-print(c("MYRPAT", "VERSPM-base", "VERSPM-base(1)", "VERSPM-pop", "VERSPM-run"')
+message('\nExpect to see:')
+print(c("VE-State-base", "VERSPM-base", "VERSPM-base(1)", "VERSPM-pop", "VERSPM-run"))
 print(dir("models"))
+print(openModel())
 
 # And you can get rid of the extra model like this (careful that you're deleting the right one!)
 # It's probably better to use File explorer (Windows) or Finder (Mac)

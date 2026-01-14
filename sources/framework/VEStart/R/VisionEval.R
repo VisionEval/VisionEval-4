@@ -142,8 +142,8 @@ startVisionEval <- function(
       message("Please select a suitable VisionEval VE_RUNTIME directory for 'models'")
       stop("Installation cancelled.")
     }
+    message("Setting up VE_RUNTIME as ",ve.runtime)
   }
-  message("Setting up VE_RUNTIME as ",ve.runtime)
 
   # Save the important parameters
   ve.env$ve.runtime <- ve.runtime
@@ -165,7 +165,14 @@ startVisionEval <- function(
   sapply(rev(which(toDetach)),function(p) detach(pos=p))
   loadedVE <- loadedNamespaces() # in order of first loaded to last loaded
   toUnload <- loadedVE[grepl("^VE",loadedVE) & loadedVE != "VEStart"]
-  sapply(rev(toUnload),unloadNamespace)
+  # Following includes some hacks to work around tricky cross-namespace dependencies when cleaning up build before running
+  if ( "VESimLandUse" %in% toUnload ) {
+    unloadNamespace("VESimLandUse")
+    unloadNamespace("VELandUse")
+  }
+  if ( inherits(try(sapply(rev(toUnload),unloadNamespace),silent=TRUE),"try-error") ) {
+    sapply(toUnload,unloadNamespace)
+  } # there's no apparent way to get the namespaces to unload cleanly in order
 
   # Clear visioneval so we can update it too
   if ( "package:visioneval" %in% search() ) detach("package:visioneval")
@@ -255,7 +262,7 @@ checkSetup <- function(ve.home,ve.runtime,overwrite=FALSE) {
         # NOTE: We wouldn't get here unless this.R has a library set up already
         # This message/change is just about tracking what R version the user has been using in this VE_RUNTIME
         message("Previously ran with R",ve.env$that.R," in ",ve.runtime)
-        message("Re-run startVisionEval(overwrite=T) to change to R",ve.env$this.R)
+        message("Tried to run with this different R version ",ve.env$this.R)
         return(list(RVersion=FALSE))
       } else good.r.version <- TRUE
     }
@@ -302,7 +309,7 @@ ve.setup.environ <- function(ve.home,ve.runtime,setupHome=FALSE,overwrite=FALSE)
 
   # If wrong R version, provide message
   if ( ! isTRUE(setup.status$RVersion) && isFALSE(overwrite) ) {
-    stop("Retry with overwrite=TRUE to change R version, or pick a different runtime directory.")
+    stop(call.=FALSE,"Retry with overwrite=TRUE to change R version.")
   }
 
   # Check if startup files exist or we can overwrite them

@@ -26,6 +26,8 @@ In brief, the walkthrough in `00-walkthrough.R` includes the following sections:
 - Extracting results: `03-extract.R`
   + Shows how to extract raw results from a model into tabular form that you can analyze in another system (or continue to analyze in R)
 
-- Run scenarios: `04-scenarios.R`
+- Additional details on extracing results: `03A-advanced-export.R`
+
+- Run a model with scenarios: `04-scenarios.R`
 
 - Develop and run queries: `05-queries.R`

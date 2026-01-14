@@ -16,60 +16,6 @@ mwr <- openModel("VERSPM-run") # Run Install.R to install/run that model
 results <- mwr$run()
 print(results)
 
-########################
-# CHANGING DISPLAY UNITS
-########################
-
-# You can create a file called "display_units.csv" and put it in your
-# model's "defs" folder. Then the fields listed there can have their
-# units automatically converted when you extract them.
-
-# Here, we'll set up the display_units file with a useful conversion
-# This shows how to construct a DisplayUnitsFile
-# Practically speaking, you can do this once in your life and drop it
-# into your model's "defs" directory.
-# You don't have to do it like this: you can also build it by hand
-results$select()$all()
-un <- results$list(details=TRUE)[,c("Group","Table","Name","Units")]
-spd <- un[ grepl("MI/",un$Units)&grepl("sp",un$Name,ignore.case=TRUE), ]
-spd$DisplayUnits <- "MI/HR"
-print(spd)
-
-# Put the display_units file in a useful place (model 'defs' folder)
-# This file will be automatically used during export!
-display_units_file <- file.path(
-  mwr$modelPath,           # folder for model, inside the "models" folder
-  mwr$setting("ParamDir"), # "defs" by default
-  mwr$setting("DisplayUnitsFile") # defaults to 'display_units.csv'
-)
-cat(display_units_file,"\n")
-write.csv(spd,file=display_units_file,row.names=FALSE)
-
-# Select speed fields...
-# "select=TRUE" changes the selection within "results" (rather than creating an
-# independent selection - then we can just continue to use "results". Do
-# "results$select()$all()" (see above) to reset to everything.
-selected <- results$select()$find(pattern="speed",Group="Year",Table="Marea",select=TRUE)
-
-# Add the key fields
-selected <- selected$addkeys() # Forces tables to have basic geography fields plus "Id"
-print(results$units())
-
-# Extract the speed fields to lists of data.frames
-# Using DISPLAY units (convertUnits=TRUE is the default if "display_units.csv" exists)
-convertedvalues <- results$extract(selection=selected,convertUnits=TRUE)  # Using Display Units
-# Using DATASTORE units
-rawvalues <- results$extract(selection=selected,convertUnits=FALSE)  # Using DATASTORE units
-udnames <- names(convertedvalues[[1]]) # The data.frame fields may be in a random order...
-print(convertedvalues[[1]][,udnames])
-print(rawvalues[[1]][,udnames])
-
-# Once you create "display_units.csv", it is "set and forget" for standard exports
-# Every future export will do unit conversions by default for those named fields
-# unless you say "convertUnits=FALSE" when you export.
-defaultvalues <- results$extract(selection=selected)
-print(defaultvalues[[1]][,udnames]) # same as "convertedvalues"
-
 #########################
 # ACCESSING EXPORTED DATA
 #########################
@@ -102,11 +48,11 @@ if ( ! require("writexl") ) {
   install.packages("writexl") # goes into .libPaths()[1], which is probably ve-lib
 }
 # This dumps EVERYTHING, so the Excel workbook is pretty huge (~150Mb)
-# though "data" by default returns a huge list of data.frames, if you use
+# Though "data" by default returns a huge list of data.frames, if you use
 # a formatter function, it returns whatever comes back from the function.
 # Using writexl::write_xlsx returns the full path of the created workbook
 excel.workbook.name <- results$export()$data(
-  formatList=TRUE,
+  formatList=TRUE, # Handle a list of data.frames; otherwise we expect a single data.frame to output
   format=writexl::write_xlsx,
   path=file.path(mwr$exportPath(),"My-Excel-Data.xlsx")
 )
@@ -134,7 +80,7 @@ exporter$data(
   path=file.path(mwr$exportPath(),"Back-from-SQLite.xlsx")
 )
 
-rm(exporter) # will close, eventually, the SQLite database; run gc() if still appears to be "in use"
+rm(exporter) # will close, eventually, the SQLite database; run gc() or quit R if still appears to be "in use"
 
 mwr$dir(output=TRUE,all.files=TRUE)
 
@@ -149,12 +95,13 @@ mwr$dir(output=TRUE,all.files=TRUE)
 # be partitioned into folders (what the CSV export does), or the partition can be written
 # into the table names (which is the default for SQLite)
 
-# To make a partition, you just list a field in the output data (usually a geography, or
-# the scenario year, or the scenario name) and explain whether you want the partitioned
-# table identified by a "folder" or coded in the table "name". Data from any source with
-# the same partition ends up in the same table (so you can accumulate every year of every
-# scenario in a single "Household" table, but keep the Global group tables with the same
-# name separate).
+# To make a partition, you just list a field that is present in the output data (usually a
+# geography, or the scenario year, or the scenario name) and explain whether you want the
+# partitioned table stored in a "folder" or coded in the table "name" (for SQL databases,
+# a "folder" is also incorporated into the table name). Data from any source with the same
+# partition ends up in the same table (so you can accumulate every year of every scenario
+# in a single "Household" table, but keep separate the Global group tables with the same
+# name such as Azone or Marea).
 
 # Here are some examples of partitioning:
 
@@ -217,10 +164,11 @@ mariadb <- list(
 
 # Then just do this (You need a working database!!!)
 # Note that this will just keep piling a model's worth of tables into the database
-# It does not remove or overwrite anything
+# It does not remove or overwrite anything (so you'll get new tables with new timestamp names)
 # Tables with the same name are distinguished by their initial timestamp
 # You'll need to use your own database utility to clean them up
-# If you're wanting to use MySQL or MariaDB (or some other "real" SQL), you should already know how to do that.
+# If you're wanting to use MySQL or MariaDB (or some other "real" SQL), you should already know how
+# to use it.
 exporter <- mwr$results()$export(connection=mariadb)
 exporter$list() # Only shows the tables created this time
 
@@ -228,16 +176,20 @@ exporter$list() # Only shows the tables created this time
 # (or in the runtime visioneval.cnf for "all model" defaults. You can either
 # create a new exporter name, or redefine defaults for an existing one.
 
-# This block in visioneval.cnf makes "mysql" use your local database (uncomment it!)
-# FYI the MariaDB driver will also work for branded MySQL databases
-# Probably don't need install.package flag since you will presumably already have installed it
-#  but there's no harm including "install.package: true" here as well
+# The follwoing block in visioneval.cnf makes "mysql" use your local database
+# Copy it in into your model's visioneval.cnf (or put it in the runtime visioneval.cnf if you
+# want to use the same database for every model). Naturally, remove the hash (comment) mark
+# when copying.
+# FYI the MariaDB driver will also work for branded MySQL databases if that's what you have.
+# Probably don't need the install.package flag since you will presumably already have installed
+# RMariaDB, but there's no harm including "install.package: true" here as well
 
 # Exporters:
-#   mysql:
+#   mysql:                        # this is the DB name you use in the $export function (see below)
 #     Connection:
 #       driver: sql
 #       package = RMariaDB,       # will require the package, which must be installed
+#       install.package: true     # (Optional) - install "package" if it's not already present
 #       drv = RMariaDB::MariaDB() # character string will be parsed
 #       Timestamp: prefix         # Timestamp each table at the beginning of its name
 #       DBIConfig:
@@ -250,3 +202,62 @@ exporter$list() # Only shows the tables created this time
 #
 # Then when you do the following in R, it will use your database:
 #    mwr$run()$export("mysql")
+
+########################
+# CHANGING DISPLAY UNITS
+########################
+
+# You usually won't need to change the output units. By default, they
+# show up in the sensible units used by the modules that put the data
+# into the Datastore originally. Should you want to do something
+# fancy, you can follow the instructions here.
+
+# You can create a file called "display_units.csv" and put it in your
+# model's "defs" folder. Then the fields listed there can have their
+# units automatically converted when you extract them.
+
+# Here, we'll set up the display_units file with a useful conversion
+# This shows how to construct a DisplayUnitsFile
+# Practically speaking, you can do this once in your life and drop it
+# into your model's "defs" directory.
+# You don't have to do it like this: you can also build it by hand
+results$select()$all()
+un <- results$list(details=TRUE)[,c("Group","Table","Name","Units")]
+spd <- un[ grepl("MI/",un$Units)&grepl("sp",un$Name,ignore.case=TRUE), ]
+spd$DisplayUnits <- "MI/HR"
+print(spd)
+
+# Put the display_units file in a useful place (model 'defs' folder)
+# This file will be automatically used during export!
+display_units_file <- file.path(
+  mwr$modelPath,           # folder for model, inside the "models" folder
+  mwr$setting("ParamDir"), # "defs" by default
+  mwr$setting("DisplayUnitsFile") # defaults to 'display_units.csv'
+)
+cat(display_units_file,"\n")
+write.csv(spd,file=display_units_file,row.names=FALSE)
+
+# Select speed fields...
+# "select=TRUE" changes the selection within "results" (rather than creating an
+# independent selection - then we can just continue to use "results". Do
+# "results$select()$all()" (see above) to reset to everything.
+selected <- results$select()$find(pattern="speed",Group="Year",Table="Marea",select=TRUE)
+
+# Add the key fields
+selected <- selected$addkeys() # Forces tables to have basic geography fields plus "Id"
+print(results$units())
+
+# Extract the speed fields to lists of data.frames
+# Using DISPLAY units (convertUnits=TRUE is the default if "display_units.csv" exists)
+convertedvalues <- results$extract(selection=selected,convertUnits=TRUE)  # Using Display Units
+# Using DATASTORE units
+rawvalues <- results$extract(selection=selected,convertUnits=FALSE)  # Using DATASTORE units
+udnames <- names(convertedvalues[[1]]) # The data.frame fields may be in a random order...
+print(convertedvalues[[1]][,udnames])
+print(rawvalues[[1]][,udnames])
+
+# Once you create "display_units.csv", it is "set and forget" for standard exports
+# Every future export will do unit conversions by default for those named fields
+# unless you say "convertUnits=FALSE" when you export.
+defaultvalues <- results$extract(selection=selected)
+print(defaultvalues[[1]][,udnames]) # same as "convertedvalues"

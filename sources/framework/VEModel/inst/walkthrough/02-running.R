@@ -8,7 +8,7 @@ require(VEModel)
 
 # Only need the following if you're in a new R session after doing 01-install.R
 mod <- openModel("VERSPM-run")
-print(mod) # Should say "Run complete"
+print(mod) # Should say "Run Complete"
 
 mod$run() # basic instruction to run the model
 # but it does nothing here since "mod" has already run
@@ -20,7 +20,10 @@ mod$run("save")
 
 # explicit version of the default action:
 #   try re-running everything that is not already "Run Complete"
-# Use this if you've added a stage or scenario just to run the new stuff
+# Use this just to run incomplete stages or scenarios.
+# You do not need to re-open the model if the only changes were inputs
+# If you change the configuration (e.g. adding a scenario), you do need to re-open the model
+mod <- openModel("VERSPM-run")
 mod$run("continue")
 
 # let's look at a multi-stage model
