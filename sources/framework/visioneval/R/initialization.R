@@ -665,10 +665,15 @@ parseModuleCalls <- function( ModuleCalls_df, AlreadyInitialized=character(0), R
   # Results of Initialization in that case will already be in the Datastore
   for (Pkg in unique(setdiff(ModuleCalls_df$PackageName,AlreadyInitialized))) {
     PkgData <- data(package = Pkg)$results[,"Item"]
-    if ("InitializeSpecifications" %in% PkgData) {
+    initName <- if ("InitializeSpecifications" %in% PkgData) {
+      "Initialize"
+    } else if ( paste0("Initialize",Pkg,"Specifications") %in% PkgData) {
+      paste0("Initialize",Pkg)
+    } else NA
+    if ( ! is.na(initName) ) {
       Add_df <-
       data.frame(
-        ModuleName = "Initialize",
+        ModuleName = initName,
         PackageName = Pkg,
         RunFor = "AllYears",
         RunYear = "Year",
@@ -2167,7 +2172,7 @@ processInputFiles <- function(AllSpecs_ls) {
       ProcessedInputs_ls[[EntryName]] <- processModuleInputs(ModuleSpecs_ls, Module, Package)
       # Process inputs with Initialize function
       if (length(ProcessedInputs_ls[[EntryName]]$Errors) == 0) {
-        if (Module == "Initialize") {
+        if ( Module == "Initialize" || Module == paste0("Initialize",Package) ) {
           # Run the Initialize function here so we can swap in defaults for Optional inputs
           # and do Package-level cross-file input checking.
           initFunc <- eval(parse(text = paste(Package, Module, sep = "::")))

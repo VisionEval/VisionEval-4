@@ -21,7 +21,7 @@ TestSetup_ls <- list(
 
 #Define the module tests
 Tests_ls <- list(
-  list(ModuleName = "Initialize",
+  list(ModuleName = "InitializeVESimLandUse",
        LoadDatastore = TRUE, SaveDatastore = TRUE, DoRun = TRUE, RequiredPackages = "VESimHouseholds"),
   list(ModuleName = "CreateSimBzones",
        LoadDatastore = TRUE, SaveDatastore = TRUE, DoRun = TRUE),

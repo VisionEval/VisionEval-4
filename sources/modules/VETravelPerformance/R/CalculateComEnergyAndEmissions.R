@@ -439,6 +439,7 @@ CalculateComEnergyAndEmissions <- function(L) {
       Auto = ComSvcAutoProp_Pt,
       LtTrk = ComSvcLtTrkProp_Pt
     )
+    ComSvcProp_PtVt <- sweep(ComSvcProp_VtPt, 2, ComSvcProp_Vt, "*")
     sweep(ComSvcProp_VtPt, 2, ComSvcProp_Vt, "*")
   })
 

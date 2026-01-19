@@ -38,12 +38,14 @@ load.builder <- function(ve.scripts) {
     )
     if ( ! exists("script.contents") ) next
 
+    # NOTE: ve.builder environment is created outside by VE-Bootstrap.R or on attaching VEBuild
     eval(parse(text=paste0("import::into(.into='ve.builder',",paste(script.contents,collapse=","),",.from='",sf,"')")))
     rm(script.contents)
   }
-  if ( length( instructions <- ls("ve.builder",pattern="^build\\.instructions") ) > 0 ) {
-    eval(parse(text=paste("message(",instructions,"()",")")))
-  }
+  ve.instructions()
+#   if ( length( instructions <- ls("ve.builder",pattern="^build\\.instructions") ) > 0 ) {
+#     eval(parse(text=paste("message(",instructions,"()",")")))
+#   }
   unloadNamespace("import") # so we can load it again as part of ve.build
   rm(sf,script.files)
 }

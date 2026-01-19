@@ -9,7 +9,14 @@
 #
 #This module estimates all the models for synthesizing Bzones and their land use attributes as a function of Azone characteristics as well as data derived from the US Environmental Protection Agency's Smart Location Database (SLD) augmented with US Census housing and household income data, and data from the National Transit Database. Details on these data are included in the VESimLandUseData package. The combined dataset contains a number of land use attributes at the US Census block group level. The goal of Bzone synthesis to generate a set of SimBzones in each Azone that reasonably represent block group land use characteristics given the characteristics of the Azone, the Marea that the Azone is a part of, and scenario inputs provided by the user.
 #
-#Many of the models and procedures used in Bzone synthesis pivot from profiles developed from these data sources for specific urbanized areas, as well as more general profiles for different urbanized area population size categories, towns, and rural areas. Using these specific and general profiles enables the simulated Bzones (SimBzones) to better represent the areas being modeled and the variety of conditions found in different states. The documentation for the `Initialize` module has a listing of urbanized area profile names.
+#Many of the models and procedures used in Bzone synthesis pivot from
+#profiles developed from these data sources for specific urbanized
+#areas, as well as more general profiles for different urbanized area
+#population size categories, towns, and rural areas. Using these
+#specific and general profiles enables the simulated Bzones
+#(SimBzones) to better represent the areas being modeled and the
+#variety of conditions found in different states. The documentation
+#for the `InitializeVESimLandUse` module has a listing of urbanized area profile names.
 #
 #The models estimated by this module support the synthesis of SimBzones within each Azone that simulate the land use characteristics of neighborhoods likely to be found in the Azone. The SimBzones are assigned quantities of households and jobs and are attributed with several land use measures in the process. The characteristics are:
 #

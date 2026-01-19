@@ -1,13 +1,13 @@
 #' @include LoadDefaultValues.R
 NULL
 
-#============
-#Initialize.R
-#============
+#===============================
+#InitializeVEPowertrainsAndFuels.R
+#===============================
 
 #<doc>
 #
-## Initialize Module
+## InitializeVEPowertrainsAndFuels Module
 #### November 24, 2018
 #
 # This module processes vehicle and fuel characteristics files that model users may optionally supply. When these files are supplied, modules in the package that compute carbon intensities of vehicle travel will use the user-supplied data instead of the datasets that are part of the package (see the LoadDefaultValues.R script). The optional user inputs and purposes of those inputs are:
@@ -55,7 +55,7 @@ NULL
 
 #Define the data specifications
 #------------------------------
-InitializeSpecifications <- list(
+InitializeVEPowertrainsAndFuelsSpecifications <- list(
   #Level of geography module is applied at
   RunBy = "Region",
   #Specify new tables to be created by Inp if any
@@ -334,9 +334,9 @@ InitializeSpecifications <- list(
 
 #Save the data specifications list
 #---------------------------------
-#' Specifications list for Initialize module
+#' Specifications list for InitializeVEPowertrainsAndFuels module
 #'
-#' A list containing specifications for the Initialize module.
+#' A list containing specifications for the InitializeVEPowertrainsAndFuels module.
 #'
 #' @format A list containing 5 components:
 #' \describe{
@@ -347,30 +347,32 @@ InitializeSpecifications <- list(
 #'  \item{Get}{module inputs to be read from the datastore}
 #'  \item{Set}{module outputs to be written to the datastore}
 #' }
-#' @source Initialize.R script.
-"InitializeSpecifications"
-visioneval::savePackageDataset(InitializeSpecifications, overwrite = TRUE)
+#' @source InitializeVEPowertrainsAndFuels.R script.
+"InitializeVEPowertrainsAndFuelsSpecifications"
+visioneval::savePackageDataset(InitializeVEPowertrainsAndFuelsSpecifications, overwrite = TRUE)
 
 #=======================================================
 #SECTION 3: DEFINE FUNCTIONS THAT IMPLEMENT THE SUBMODEL
 #=======================================================
-#Main function processes optional user energy and emissions inputs that have
-#been preprocessed by the processModuleInputs function. The Initialize function
-#checks datasets that specify fuel type or powertrain type proportions to
-#determine whether they sum to 1. If the sum for a dataset differs from 1 by
-#more than 1%, then the function returns an error message identifying the
-#problem dataset. If the sum differs from 1 but the difference is 1% or less
-#it is assumed that the difference is due to rounding errors and function
-#adjusts the proportions so that they equal 1. In this case, a warning message
-#is returned as well that the framework will write to the log.
+#Main function processes optional user energy and emissions inputs
+#that have been preprocessed by the processModuleInputs function. The
+#InitializeVEPowertrainsAndFuels function checks datasets that specify
+#fuel type or powertrain type proportions to determine whether they sum
+#to 1. If the sum for a dataset differs from 1 by more than 1%, then
+#the function returns an error message identifying the problem dataset.
+#If the sum differs from 1 but the difference is 1% or less it is
+#assumed that the difference is due to rounding errors and function
+#adjusts the proportions so that they equal 1. In this case, a warning
+#message is returned as well that the framework will write to the log.
 
 #Main module function that checks and adjusts optional proportions inputs
 #------------------------------------------------------------------------
 #' Check and adjust fuel and powertrain proportions inputs.
 #'
-#' \code{Initialize} checks optional fuel and powertrains proportions datasets
-#' to determine whether they each sum to 1, creates error and warning messages,
-#' and makes adjustments if necessary.
+#' \code{InitializeVEPowertrainsAndFuels} checks optional fuel and
+#' powertrains proportions datasets to determine whether they each sum
+#' to 1, creates error and warning messages, and makes adjustments if
+#' necessary.
 #'
 #' This function processes optional user energy and emissions inputs that have
 #' been preprocessed by the processModuleInputs function. It checks datasets
@@ -387,11 +389,14 @@ visioneval::savePackageDataset(InitializeSpecifications, overwrite = TRUE)
 #' components: Errors and Data.
 #' @return A list that is the same as the input list with an additional
 #' Warnings component.
-#' @name Initialize
+#' @name InitializeVEPowertrainsAndFuels
 #' @import visioneval
 #' @import VEHouseholdTravel
 #' @export
-Initialize <- function(L) {
+InitializeVEPowertrainsAndFuels <- function(L) {
+
+  visioneval::writeLog("Initializing VEPowertrainsAndFuels",Level="warn")
+
   #Set up
   #------
   #Initialize error and warnings message vectors
@@ -666,7 +671,7 @@ Initialize <- function(L) {
 #===============================================================
 #Run module automatic documentation
 #----------------------------------
-documentModule("Initialize")
+documentModule("InitializeVEPowertrainsAndFuels")
 
 #Test code to check specifications, loading inputs, and whether datastore
 #contains data needed to run module. Return input list (L) to use for developing
@@ -689,10 +694,10 @@ documentModule("Initialize")
 # setUpTests(TestSetup_ls)
 # #Run test module
 # TestDat_ <- testModule(
-#   ModuleName = "Initialize",
+#   ModuleName = "InitializeVEPowertrainsAndFuels",
 #   LoadDatastore = TRUE,
 #   SaveDatastore = TRUE,
 #   DoRun = FALSE
 # )
 # L <- TestDat_
-# R <- Initialize(TestDat_)
+# R <- InitializeVEPowertrainsAndFuels(TestDat_)

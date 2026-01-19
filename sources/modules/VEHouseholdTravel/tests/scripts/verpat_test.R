@@ -33,7 +33,7 @@ setwd("..")
 #Run default data generation for CalculateTravelDemand Module
 source("R/LoadDefaultValues.R")
 #Test Initialize module
-source("R/Initialize.R")
+source("R/InitializeVEHouseholdTravel.R")
 testModule(
   ModuleName = "Initialize",
   LoadDatastore = TRUE,

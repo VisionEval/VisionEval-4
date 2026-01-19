@@ -1,9 +1,9 @@
-#============
-#Initialize.R
-#============
+#========================
+#InitializeVESimLandUse.R
+#========================
 
 #<doc>
-## Initialize Module
+## InitializeVESimLandUse Module
 #### June 1, 2020
 #
 #Modules in the VESimLandUse package synthesize Bzones and their land use attributes as a function of Azone characteristics as well as data derived from the US Environmental Protection Agency's Smart Location Database (SLD) augmented with US Census housing and household income data, and data from the National Transit Database. Details on these data are included in the VESimLandUseData package. The combined dataset contains a number of land use attributes at the US Census block group level. The goal of Bzone synthesis to generate a set of SimBzones in each Azone that reasonably represent block group land use characteristics given the characteristics of the Azone, the Marea that the Azone is a part of, and scenario inputs provided by the user.
@@ -89,7 +89,7 @@ rm(AllNames_, LocType_, UzaNames_, UzaNamesPad_, UzaNames_mx)
 #'  \item{Names}{a sorted vector of urbanized area names}
 #'  \item{Inp}{a 3-column data frame of the names to include in documentation}
 #' }
-#' @source Initialize.R script.
+#' @source InitializeVESimLandUse.R script.
 "UzaProfileNames_ls"
 visioneval::savePackageDataset(UzaProfileNames_ls, overwrite = TRUE)
 
@@ -100,7 +100,7 @@ visioneval::savePackageDataset(UzaProfileNames_ls, overwrite = TRUE)
 
 #Define the data specifications
 #------------------------------
-InitializeSpecifications <- list(
+InitializeVESimLandUseSpecifications <- list(
   #Level of geography module is applied at
   RunBy = "Region",
   #Specify new tables to be created by Inp if any
@@ -365,9 +365,9 @@ InitializeSpecifications <- list(
 )
 #Save the data specifications list
 #---------------------------------
-#' Specifications list for Initialize module
+#' Specifications list for InitializeVESimLandUse module
 #'
-#' A list containing specifications for the Initialize module.
+#' A list containing specifications for the InitializeVESimLandUse module.
 #'
 #' @format A list containing 2 components:
 #' \describe{
@@ -375,9 +375,9 @@ InitializeSpecifications <- list(
 #'  \item{Inp}{scenario input data to be loaded into the datastore for this
 #'  module}
 #' }
-#' @source Initialize.R script.
-"InitializeSpecifications"
-visioneval::savePackageDataset(InitializeSpecifications, overwrite = TRUE)
+#' @source InitializeVESimLandUse.R script.
+"InitializeVESimLandUseSpecifications"
+visioneval::savePackageDataset(InitializeVESimLandUseSpecifications, overwrite = TRUE)
 
 
 #=======================================================
@@ -569,9 +569,10 @@ calcNumJobsByLocType <-
 #-----------------------------------------------------------------------
 #' Check and adjust fuel and powertrain proportions inputs.
 #'
-#' \code{Initialize} checks optional fuel and powertrains proportions datasets
-#' to determine whether they each sum to 1, creates error and warning messages,
-#' and makes adjustments if necessary.
+#' \code{InitializeVESimLandUse} checks optional fuel and powertrains
+#' proportions datasets to determine whether they each sum to 1,
+#' creates error and warning messages, and makes adjustments if
+#' necessary.
 #'
 #' This function processes optional user energy and emissions inputs that have
 #' been preprocessed by the processModuleInputs function. It checks datasets
@@ -590,7 +591,9 @@ calcNumJobsByLocType <-
 #' Warnings component.
 #' @import visioneval
 #' @export
-Initialize <- function(L) {
+InitializeVESimLandUse <- function(L) {
+
+  visioneval::writeLog("Initializing VESimLandUse",Level="warn")
 
   #Set up
   #------
@@ -1079,7 +1082,7 @@ Initialize <- function(L) {
         ErrMsg <- paste0(
           "The urbanized area profile name - ", UzaProfileName,
           " - assigned to Marea - ", Marea, "does not exist. ",
-          "Read the documentation for this (Initialize) module to see a list."
+          "Read the documentation for this (InitializeVESimLandUse) module to see a list."
         )
         Errors_ <- c(Errors_, ErrMsg)
       }
@@ -1122,10 +1125,10 @@ Initialize <- function(L) {
 #===============================================================
 #Run module automatic documentation
 #----------------------------------
-documentModule("Initialize")
+documentModule("InitializeVESimLandUse")
 
 #Test code to perform additional checks on input files. Return input list
-#(TestDat_) to use for developing the Initialize function.
+#(TestDat_) to use for developing the InitializeVESimLandUse function.
 #-------------------------------------------------------------------------------
 # source("tests/scripts/test_functions.R")
 # #Set up test data
@@ -1138,13 +1141,13 @@ documentModule("Initialize")
 # ))
 # #Return test dataset
 # TestDat_ <- testModule(
-#   ModuleName = "Initialize",
+#   ModuleName = "InitializeVESimLandUse",
 #   LoadDatastore = TRUE,
 #   SaveDatastore = TRUE,
 #   DoRun = FALSE
 # )
 # L <- TestDat_
-# R <- Initialize(TestDat_)
+# R <- InitializeVESimLandUse(TestDat_)
 
 #Test code to check everything including running the module and checking whether
 #the code runs completely and produces desired results
@@ -1159,7 +1162,7 @@ documentModule("Initialize")
 #   ClearLogs = TRUE
 # ))
 # TestDat_ <- testModule(
-#   ModuleName = "Initialize",
+#   ModuleName = "InitializeVESimLandUse",
 #   LoadDatastore = TRUE,
 #   SaveDatastore = TRUE,
 #   DoRun = TRUE

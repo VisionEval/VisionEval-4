@@ -745,8 +745,6 @@ calcCongestion <- function(Model_ls, DvmtByVehType, PerCapFwyLnMi, PerCapArtLnMi
 
   # Calculate fuel economy adjustment factors for speed smoothing and eco-driving
   #==============================================================================
-  writeLog("Wrapping up calcCongestion",Level="warn") # DEBUG
-
   # Put inputs and model in form for calculations
   #----------------------------------------------
   # Maximum fuel savings (50% of the theoretical maximum)
@@ -761,7 +759,6 @@ calcCongestion <- function(Model_ls, DvmtByVehType, PerCapFwyLnMi, PerCapArtLnMi
   EcoDriverProp_Ty <- c( LtVeh=Model_ls$SmoothEcoDriveParmVa_ls$LtVehEco[ "Metro", CurrYear ],
                          Truck=Model_ls$SmoothEcoDriveParmVa_ls$TruckEco[ "Metro", CurrYear ] )
 
-  writeLog("Determine benefits for light vehicles",Level="warn") # DEBUG
   # Determine benefits for light vehicles with ICE engines
   #-------------------------------------------------------
   # Non-ecodriver benefits result from speed smoothing only
@@ -771,7 +768,6 @@ calcCongestion <- function(Model_ls, DvmtByVehType, PerCapFwyLnMi, PerCapArtLnMi
   LtVehEcoBenefit_SpFc[ LtVehNonEcoBenefit_SpFc > LtVehEcoBenefit_SpFc ] <-
     LtVehNonEcoBenefit_SpFc[ LtVehNonEcoBenefit_SpFc > LtVehEcoBenefit_SpFc ]
 
-  writeLog("Determine benefits for ICE trucks",Level="warn") # DEBUG
   # Determine benefits for trucks with ICE engines
   #-----------------------------------------------
   # Since trucks are dealt with in aggregate, smoothing and ecodriving benefits are averaged
@@ -785,7 +781,6 @@ calcCongestion <- function(Model_ls, DvmtByVehType, PerCapFwyLnMi, PerCapArtLnMi
   TruckCombBenefit_SpFc <- TruckEcoBenefit_SpFc * EcoDriverProp_Ty[ "Truck" ] +
     TruckNonEcoBenefit_SpFc * ( 1 - EcoDriverProp_Ty[ "Truck" ] )
 
-  writeLog("Calculate speed adjustments",Level="warn") # DEBUG
   # Calculate speed adjustments to fuel & power consumption
   #========================================================
 
@@ -801,7 +796,6 @@ calcCongestion <- function(Model_ls, DvmtByVehType, PerCapFwyLnMi, PerCapArtLnMi
   MpkwhAdj_Ty <- numeric( length( Ty ) )
   names( MpkwhAdj_Ty ) <- Ty
 
-  writeLog("Calculate fuel economy adjustments",Level="warn") # DEBUG
   # Function to Calculate the fuel economy adjustments from FSC coefficients and a reference speed
   #-----------------------------------------------------------------------------------------------
   calcFeAdj <- function( FscCoef_, Speed_, RefSpeed ) {
@@ -836,7 +830,6 @@ calcCongestion <- function(Model_ls, DvmtByVehType, PerCapFwyLnMi, PerCapArtLnMi
   # Initialize adjustment arrays
   FeAdj_ClFcAv <- array( 0, dim=c(length(Cl),length(Fc),length(Av)), dimnames=list(Cl,Fc,Av) )
   # Calculate freeway adjustments for light vehicles
-  writeLog("Calculate freeway adjustments for light vehicles",Level="warn") # DEBUG
   for( av in c( "LdIce", "LdHev", "LdEv", "LdFcv" ) ) { 		    # Cycle through vehicles
     FscRows_Ce <- which( Model_ls$AdvVehFsc..$FacilityType=="Fwy" & Model_ls$AdvVehFsc..$AdvVehType==av )
     names( FscRows_Ce ) <- Model_ls$AdvVehFsc..$CongEff[ FscRows_Ce ]
@@ -850,7 +843,6 @@ calcCongestion <- function(Model_ls, DvmtByVehType, PerCapFwyLnMi, PerCapArtLnMi
                  Speed_=SpdCalc_$LtVehCongSpeed_ClFc[,"Fwy"],
                  RefSpeed=Model_ls$FwyNormSpd )
   }
-  writeLog("Calculate freeway adjustments for trucks",Level="warn") # DEBUG
   # Calculate freeway adjustments for trucks
   for( av in c( "HdIce" ) ) { 		    # Cycle through vehicles
     FscRows_Ce <- which( Model_ls$AdvVehFsc..$FacilityType=="Fwy" & Model_ls$AdvVehFsc..$AdvVehType==av )
@@ -865,7 +857,6 @@ calcCongestion <- function(Model_ls, DvmtByVehType, PerCapFwyLnMi, PerCapArtLnMi
                  Speed_=SpdCalc_$TruckCongSpeed_ClFc[,"Fwy"],
                  RefSpeed=Model_ls$FwyNormSpd )
   }
-  writeLog("Calculate arterial adjustments",Level="warn") # DEBUG
   # Calculate arterial adjustments for light vehicles
   for( av in c( "LdIce", "LdHev", "LdEv", "LdFcv" ) ) { 		    # Cycle through vehicles
     FscRows_Ce <- which( Model_ls$AdvVehFsc..$FacilityType=="Art" & Model_ls$AdvVehFsc..$AdvVehType==av )
@@ -881,7 +872,6 @@ calcCongestion <- function(Model_ls, DvmtByVehType, PerCapFwyLnMi, PerCapArtLnMi
                  RefSpeed=Model_ls$ArtNormSpd )
   }
   # Calculate arterial adjustments for trucks
-  writeLog("Calculate arterial adjustments for trucks",Level="warn") # DEBUG
   for( av in c( "HdIce" ) ) { 		    # Cycle through vehicles
     FscRows_Ce <- which( Model_ls$AdvVehFsc..$FacilityType=="Art" & Model_ls$AdvVehFsc..$AdvVehType==av )
     names( FscRows_Ce ) <- Model_ls$AdvVehFsc..$CongEff[ FscRows_Ce ]
@@ -1179,15 +1169,10 @@ CalculateCongestionBase <- function(L) {
                                   UsePce=FALSE, CurrYear = L$G$Year)
 
   # Insert results in array
-  writeLog("Inserting Results into array, MpgMpk",Level="warn") # DEBUG
   MpgMpkwhAdjByMaPtType_vc[Marea_vc, ] <- CongResults_ls$MpgMpkwhAdj_Pt
-  writeLog("VehHr",Level="warn") # DEBUG
   VehHrByMaVehType_vc[Marea_vc, ] <- CongResults_ls$VehHr_Ty
-  writeLog("AveSpeed",Level="warn") # DEBUG
   AveSpeedByMaVehType_vc[Marea_vc, ] <- CongResults_ls$AveSpeed_Ty
-  writeLog("FfVehHr",Level="warn") # DEBUG
   FfVehHrByMaVehType_vc[Marea_vc, ] <- CongResults_ls$FfVehHr_Ty
-  writeLog("DelayVehHr",Level="warn") # DEBUG
   DelayVehHrByMaVehType_vc[Marea_vc, ] <- CongResults_ls$DelayVehHr_Ty
 
   # Clean up
@@ -1195,7 +1180,6 @@ CalculateCongestionBase <- function(L) {
 
   # Calculate MPG adjustment on a household basis
   # Assuming the household VMT outside of metropolitan area is uncongested
-  writeLog("HhMpgMpk",Level="warn") # DEBUG
   HhMpgMpkwhAdj_Ma <- ( MpgMpkwhAdjByMaPtType_vc[,PowertrainType_vc[1:5]] * LtVehDvmtFactor_Ma ) + ( 1 - LtVehDvmtFactor_Ma )
 
   #Return the results

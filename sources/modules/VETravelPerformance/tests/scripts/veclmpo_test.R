@@ -19,7 +19,7 @@ TestSetup_ls <- list(
 
 #Define the module tests
 Tests_ls <- list(
-  list(ModuleName = "Initialize",
+  list(ModuleName = "InitializeVEHouseholdTravel",
        LoadDatastore = TRUE, SaveDatastore = TRUE, DoRun = TRUE),
   list(ModuleName = "CalculateRoadDvmt",
        LoadDatastore = TRUE, SaveDatastore = TRUE, DoRun = TRUE,

@@ -1,6 +1,6 @@
-#============
-#Initialize.R
-#============
+#=============================
+#InitializeVEHouseholdTravel.R
+#=============================
 # This module processes optional roadway DVMT and operations inputs. The
 # optional roadway DVMT inputs allow users to specify base year roadway DVMT
 # by vehicle type and how the DVMT by type splits across road classes. If these
@@ -26,7 +26,7 @@ library(visioneval)
 
 #Define the data specifications
 #------------------------------
-InitializeSpecifications <- list(
+InitializeVEHouseholdTravelSpecifications <- list(
   #Level of geography module is applied at
   RunBy = "Region",
   #Specify new tables to be created by Inp if any
@@ -69,9 +69,9 @@ InitializeSpecifications <- list(
 
 #Save the data specifications list
 #---------------------------------
-#' Specifications list for Initialize module
+#' Specifications list for InitializeVEHouseholdTravel module
 #'
-#' A list containing specifications for the Initialize module.
+#' A list containing specifications for the InitializeVEHouseholdTravel module.
 #'
 #' @format A list containing 2 components:
 #' \describe{
@@ -79,9 +79,9 @@ InitializeSpecifications <- list(
 #'  \item{Inp}{scenario input data to be loaded into the datastore for this
 #'  module}
 #' }
-#' @source Initialize.R script.
-"InitializeSpecifications"
-visioneval::savePackageDataset(InitializeSpecifications, overwrite = TRUE)
+#' @source InitializeVEHouseholdTravel.R script.
+"InitializeVEHouseholdTravelSpecifications"
+visioneval::savePackageDataset(InitializeVEHouseholdTravelSpecifications, overwrite = TRUE)
 
 
 #=======================================================
@@ -94,9 +94,9 @@ visioneval::savePackageDataset(InitializeSpecifications, overwrite = TRUE)
 #-----------------------------------------------------------------
 #' Check and optional roadway base year DVMT parameters for consistency.
 #'
-#' \code{Initialize} checks optional roadway base year DVMT parameters for
-#' consistency and returns those that have values (i.e. not NA). Errors are
-#' returned for inconsistent values.
+#' \code{InitializeVEHouseholdTravel} checks optional roadway base year DVMT parameters for
+#' consistency and returns those that have values (i.e. not NA). Errors are returned for
+#' inconsistent values.
 #'
 #' This function processes optional user roadway base year DVMT inputs to check
 #' that values are consistent. Errors are returned for inconsistent values.
@@ -109,10 +109,12 @@ visioneval::savePackageDataset(InitializeSpecifications, overwrite = TRUE)
 #' components: Errors and Data.
 #' @return A list that is the same as the input list with an additional
 #' Warnings component.
-#' @name Initialize
+#' @name InitializeVEHouseholdTravel
 #' @import visioneval
 #' @export
-Initialize <- function(L) {
+InitializeVEHouseholdTravel <- function(L) {
+
+  visioneval::writeLog("Initializing VEHouseholdTravel",Level="warn")
 
   #Set up
   #------
@@ -210,20 +212,20 @@ Initialize <- function(L) {
 #module functions
 #-------------------------------------------------------------------------------
 # TestDat_ <- testModule(
-#   ModuleName = "Initialize",
+#   ModuleName = "InitializeVEHouseholdTravel",
 #   LoadDatastore = TRUE,
 #   SaveDatastore = TRUE,
 #   DoRun = FALSE,
 #   RunFor = "NotBaseYear"
 # )
 # L <- TestDat_
-# R <- Initialize(TestDat_)
+# R <- InitializeVEHouseholdTravel(TestDat_)
 
 #Test code to check everything including running the module and checking whether
 #the outputs are consistent with the 'Set' specifications
 #-------------------------------------------------------------------------------
 # TestDat_ <- testModule(
-#   ModuleName = "Initialize",
+#   ModuleName = "InitializeVEHouseholdTravel",
 #   LoadDatastore = TRUE,
 #   SaveDatastore = TRUE,
 #   DoRun = TRUE,

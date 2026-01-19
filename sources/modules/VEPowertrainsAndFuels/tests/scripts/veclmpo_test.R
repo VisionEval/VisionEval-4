@@ -19,7 +19,7 @@ TestSetup_ls <- list(
 
 #Define the module tests
 Tests_ls <- list(
-  list(ModuleName = "Initialize",
+  list(ModuleName = "InitializeVEPowertrainsAndFueils",
        LoadDatastore = TRUE, SaveDatastore = TRUE, DoRun = TRUE),
   list(ModuleName = "CalculateCarbonIntensity",
        LoadDatastore = TRUE, SaveDatastore = TRUE, DoRun = TRUE),

@@ -50,6 +50,8 @@ loadRuntimeEnvironment <- function() { # Keep this synchronized with VE-Bootstra
       ve.env$ve.runtime <- file.path(ve.env$ve.home,"runtime")
     }
   }
+  # TODO: this doesn't look right (why ve.build.dir and not ve.home) - is it ever used?
+  # Test when building non-framework repository...
   ve.env$ve.sources <- normalizePath(Sys.getenv("VE_SOURCE",file.path(ve.env$ve.build.dir,"sources")),winslash="/",mustWork=FALSE)
 
   # ve.test() should be available in VEBuild after build ; provide a package name to search in src

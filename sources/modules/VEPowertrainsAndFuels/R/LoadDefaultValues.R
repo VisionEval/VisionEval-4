@@ -7,7 +7,19 @@
 ### LoadDefaultValues
 #### November 25, 2018
 #
-#Powertrain and fuels data are some of the most complex datasets used in VisionEval models to develop. To simplify matters for the user, default datasets are included in the package and are processed when the package is built. The user can then work with a simpler set of input files to develop scenarios. Documentation for the *Initialize* module describes the user inputs in detail. Although this simplifies model applications, it does constrain the powertrain and fuel factors that the average user can vary in scenarios. It is anticipated that this limitation will diminish over time as sufficiently knowledgeable users develop variants of the VEPowertrainsAndFuels package that include different default datasets. For example, one package may include data files representing a business-as-usual (BAU) scenario while another package represents a California zero-emissions vehicle (ZEV) rules scenario. A different default scenario can be made by altering files in the `inst/extdata` directory of the source package. Each file is documented with a correspondingly named text file. Following are brief descriptions of each of the default datasets:
+
+#Powertrain and fuels data are some of the most complex datasets used in VisionEval models to develop. To simplify
+#matters for the user, default datasets are included in the package and are processed when the package is built. The user
+#can then work with a simpler set of input files to develop scenarios. Documentation for the
+#*InitializeVEPowertrainsAndFueils* module describes the user inputs in detail. Although this simplifies model
+#applications, it does constrain the powertrain and fuel factors that the average user can vary in scenarios. It is
+#anticipated that this limitation will diminish over time as sufficiently knowledgeable users develop variants of the
+#VEPowertrainsAndFuels package that include different default datasets. For example, one package may include data files
+#representing a business-as-usual (BAU) scenario while another package represents a California zero-emissions vehicle
+#(ZEV) rules scenario. A different default scenario can be made by altering files in the `inst/extdata` directory of the
+#source package. Each file is documented with a correspondingly named text file. Following are brief descriptions of each
+#of the default datasets:
+
 #
 #* **carbon_intensity.csv**: This file includes values for the carbon intensity of motor vehicle fuels and electricity by fuel type. Carbon intensity is measured in grams of carbon dioxide equivalents per megajoule of energy. Note that the carbon intensity values may be well-to-wheels or tank-to-wheels estimates/forecasts. Well-to-wheels values include the carbon emissions to produce and transport the fuels as well as the emissions that result from using the fuels. Tank-to-wheels values only include the carbon emissions resulting from using the fuels. If the estimates are tank-to-wheels, the 'Electricity' values would be zero. VE-RSPM and VE-State models are almost always run with well-to-wheels values as this provides a more complete assessment of the effects of transportation decisions and provides a fairer assessment of the effects of electric vehicles which depends on the source of electric power. Data are provided by year for gasoline, diesel, compressed natural gas, liquified natural gas, ethanol, biodiesel, renewable natural gas, and electricity.
 #

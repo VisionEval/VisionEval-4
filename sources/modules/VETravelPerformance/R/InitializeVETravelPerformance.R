@@ -1,13 +1,13 @@
 #' @include LoadDefaultRoadDvmtValues.R
 NULL
 
-#============
-#Initialize.R
-#============
+#===============================
+#InitializeVETravelPerformance.R
+#===============================
 #
 #<doc>
 #
-## Initialize Module
+## InitializeVETravelPerformance Module
 #### January 27, 2019
 #
 #This module reads and processes roadway DVMT and operations inputs to check for inconsistent values which standard VisionEval data checks will not pick up.
@@ -86,7 +86,7 @@ rm(UzaNames_, UzaNamesPad_, UzaNames_mx, UzaDvmtNames_df)
 #'  \item{Names}{a vector of urbanized area names sorted by state and name}
 #'  \item{Table}{a 3-column data frame of the names to include in documentation}
 #' }
-#' @source Initialize.R script.
+#' @source InitializeVETravelPerformance.R script.
 "UzaDvmtNames_ls"
 visioneval::savePackageDataset(UzaDvmtNames_ls, overwrite = TRUE)
 
@@ -97,7 +97,7 @@ visioneval::savePackageDataset(UzaDvmtNames_ls, overwrite = TRUE)
 
 #Define the data specifications
 #------------------------------
-InitializeSpecifications <- list(
+InitializeVETravelPerformanceSpecifications <- list(
   #Level of geography module is applied at
   RunBy = "Region",
   #Specify new tables to be created by Inp if any
@@ -360,9 +360,9 @@ InitializeSpecifications <- list(
 
 #Save the data specifications list
 #---------------------------------
-#' Specifications list for Initialize module
+#' Specifications list for InitializeVETravelPerformance module
 #'
-#' A list containing specifications for the Initialize module.
+#' A list containing specifications for the InitializeVETravelPerformance module.
 #'
 #' @format A list containing 2 components:
 #' \describe{
@@ -370,9 +370,9 @@ InitializeSpecifications <- list(
 #'  \item{Inp}{scenario input data to be loaded into the datastore for this
 #'  module}
 #' }
-#' @source Initialize.R script.
-"InitializeSpecifications"
-visioneval::savePackageDataset(InitializeSpecifications, overwrite = TRUE)
+#' @source InitializeVETravelPerformance.R script.
+"InitializeVETravelPerformanceSpecifications"
+visioneval::savePackageDataset(InitializeVETravelPerformanceSpecifications, overwrite = TRUE)
 
 
 #=======================================================
@@ -385,9 +385,9 @@ visioneval::savePackageDataset(InitializeSpecifications, overwrite = TRUE)
 #-----------------------------------------------------------------
 #' Check and optional roadway base year DVMT parameters for consistency.
 #'
-#' \code{Initialize} checks optional roadway base year DVMT parameters for
-#' consistency and returns those that have values (i.e. not NA). Errors are
-#' returned for inconsistent values.
+#' \code{InitializeVETravelPerformance} checks optional roadway base
+#' year DVMT parameters for consistency and returns those that have
+#' values (i.e. not NA). Errors are returned for inconsistent values.
 #'
 #' This function processes optional user roadway base year DVMT inputs to check
 #' that values are consistent. Errors are returned for inconsistent values.
@@ -400,10 +400,12 @@ visioneval::savePackageDataset(InitializeSpecifications, overwrite = TRUE)
 #' components: Errors and Data.
 #' @return A list that is the same as the input list with an additional
 #' Warnings component.
-#' @name Initialize
+#' @name InitializeVETravelPerformance
 #' @import visioneval
 #' @export
-Initialize <- function(L) {
+InitializeVETravelPerformance <- function(L) {
+
+  visioneval::writeLog("Initializing VETravelPerformance",Level="warn")
 
   #------
   #Set up
@@ -810,7 +812,7 @@ Initialize <- function(L) {
 #===============================================================
 #Run module automatic documentation
 #----------------------------------
-documentModule("Initialize")
+documentModule("InitializeVETravelPerformance")
 
 #Test code to check specifications, loading inputs, and whether datastore
 #contains data needed to run module. Return input list (L) to use for developing
@@ -833,10 +835,10 @@ documentModule("Initialize")
 # # setUpTests(TestSetup_ls)
 # #Run test module
 # TestDat_ <- testModule(
-#   ModuleName = "Initialize",
+#   ModuleName = "InitializeVETravelPerformance",
 #   LoadDatastore = TRUE,
 #   SaveDatastore = TRUE,
 #   DoRun = FALSE
 # )
 # L <- TestDat_
-# R <- Initialize(L)
+# R <- InitializeVETravelPerformance(L)

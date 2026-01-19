@@ -4,6 +4,8 @@
 
 script.contents <- c(
   "build.instructions.builder",
+  "ve.instructions",
+  "ve.locations",
   "ve.setup",
   "ve.build",
   "ve.run",
@@ -19,7 +21,7 @@ script.contents <- c(
 build.instructions.builder <- function() {
   build.finished <- "VEStart" %in% utils::installed.packages(lib.loc=ve.env$ve.lib)[,"Package"] 
   paste( collapse="\n", c(
-    "ve.setup() to select VE_BUILD and VE_RUNTIME prior to (re-)building (optional).",
+    "ve.setup() to select VE_BUILD and VE_RUNTIME prior to (re-)building (optional)",
     paste0("  VE_BUILD is currently ",ve.build.dir),
     if ( ! build.finished ) paste0("  VE_RUNTIME is currently ",ve.runtime) else NULL,
     if ( ! build.finished ) paste0("ve.build() to build a full VisionEval installation into ",ve.lib) else {
@@ -30,6 +32,37 @@ build.instructions.builder <- function() {
       paste0("ve.run() to start VisionEval in VE_RUNTIME: ",ve.runtime)
     } else NULL
   ) )
+}
+
+# Issue any logged instructions (see build.instructions.builder above, or build.instructions.installer)
+ve.instructions <- function() {
+  if ( "ve.builder" %in% search() ) {
+    message("\nBuild Instructions (enter ve.instructions() to repeat):\n")
+    if ( length( instructions <- ls("ve.builder",pattern="^build\\.instructions") ) > 0 ) {
+      eval(parse(text=paste("message(",instructions,"()",")")))
+    }
+  } else "No instructions available - reload VE-Bootstrap.R or VEBuild."
+}
+
+# Report any environment-set locations
+ve.locations <- function(all=FALSE) {
+  if ( ! "ve.env" %in% search() ) error("VisionEval environment is not set up; please restart")
+  message("VE_HOME locates VE_LIB")
+  message("  VE_HOME=",ve.home)
+  message("  VE_LIB=",ve.lib,"\n")
+
+  message("Set the following using ve.setup():")
+  message("  VE_BUILD=",ve.build.dir)
+  message("  VE_RUNTIME=",ve.runtime)
+  if (all) {
+    message("\nSet the following by editing .Renviron in VE_RUNTIME:")
+    message("  VE_CRAN_MIRROR=",Sys.getenv("VE_CRAN_MIRROR","https://cloud.r-project.org"))
+    tmp.root <- Sys.getenv("VE_ROOT",NA)
+    if ( ! is.na(tmp.root) ) message("  VE_ROOT=",tmp.root)
+    message("  VE_SOURCE=",ve.sources)
+    ve.inst <- Sys.getenv("VE_INSTALL",ve.home) # VE_INSTALL is a "secondary" VE_HOME for trying installer locally
+    if ( ve.inst != ve.home ) message("  VE_INSTALL=",ve.inst) else message("  VE_INSTALL is not set")
+  }
 }
 
 # Create and return build environment (parameters for build)
@@ -1083,8 +1116,6 @@ getPackageVersion <- function( package ) {
 use.tcltk <- isTRUE(capabilities()["tcltk"])
 
 ve.setup <- function() {
-  # Can just have a series of directory browsers, with sensible defaults based on and updated with
-  # VE_HOME (if the others are still their defaults)
   # ve.sources should point to the core repository (or the "sources" folder within it)
   # ve.build.dir will hold the transient artifacts of building
   # ve.runtime will hold the models folder
