@@ -330,18 +330,34 @@ PredictWorkers <- function(L) {
     )
   #Initialize Errors vector
   Errors_ <- character(0)
-  #Define function to predict total number of workers for by household given
-  #N_ is a vector of the number of persons in the age group by household
-  #P_ is the the worker probability for the age group
-  #W is the total number of workers
+  # Define function to predict total number of workers for by household given
+  # N_ is a vector of the number of persons in the age group by household
+  # P_ is the the worker probability for the age group
+  # W is the total number of workers
+
+  # TODO: rather than "sample" from the list, develop a uniform distribution with the given probability
+  # Then pull HH ID for the most "probable" W entries.
+  # Consider this code: vec[runif(length(vec))<p], except we have to normalize to W
+  # Need to walk through this to see the structure of each element generated, especiall NumWkr_Hh
+
+  # Could do a data frame with HhIdx_Pr (HhID duplicated for number of persons), PrsnProb_Pr (also duplicated) Then add
+  # a column for weighted probability (PrsnProb_Pr/sum(PrsnProb_Pr)) then multiply those by a vector of runif draws.
+  # Then sort the data rows descending by the multiplication product and lop off the top W entries, then tabulate.
   getNumWkr <- function(N_, P_, W) {
     NumHh <- length(N_)
     NumWkr_Hh <- setNames(integer(NumHh), 1:NumHh) #Initialize count of workers
     HhIdx_Pr <- rep(1:length(N_), N_) #Vector of persons with household index
     PrsnProb_Pr <- rep(P_, N_) #Probability that each person is a worker
-    WkrIdx_ <- sample(HhIdx_Pr, W, prob = PrsnProb_Pr ) #Sample household index
-    WkrTab_ <- table(WkrIdx_) #Tabulate household index
-    NumWkr_Hh[names(WkrTab_)] <- WkrTab_
+    doNew <- visioneval::getRunParameter("NewWorkerSample",Default=0)
+    if ( doNew  ) { # separate from parameter call so we can alter it during debugging
+      NetProb_Pr <- PrsnProb_Pr/sum(PrsnProb_Pr)   # May not need this to get the relative probabilities right
+      NetProb_Pr <- runif(PrsnProb_Pr)*NetProb_Pr  # Bias the uniform distribution by the individual probabilities
+      WkrIdx <- HhIdx_Pr[order(NetProb_Pr,decreasing=TRUE)[1:W]] # HhIdx of most probable W workers
+    } else {
+      WkrIdx <- sample(HhIdx_Pr, W, prob = PrsnProb_Pr ) #Sample household index; returns list of Hh indexes for persons that are workers
+    }
+    WkrTab <- table(WkrIdx) #Tabulate household index
+    NumWkr_Hh[names(WkrTab)] <- WkrTab
     NumWkr_Hh
   }
   #Iterate through age groups and Azones and identify number of workers by
@@ -350,6 +366,7 @@ PredictWorkers <- function(L) {
   for (i in 1:length(Ag)) {
     NumWkr_Hh <- integer(NumHh)
     for (az in Az) {
+      visioneval::writeLog(Level="warn",paste("Processing Age Group",Ag[i],"for Azone",az))
       IsAz <- L$Year$Household$Azone == az
       NumWkr_Hh[IsAz] <- local({
         NumPrsn_ <- L$Year$Household[[Ag[i]]][IsAz]
