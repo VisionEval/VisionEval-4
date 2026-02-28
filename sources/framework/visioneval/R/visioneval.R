@@ -548,6 +548,7 @@ loadModel <- function(
   #       just by providing an alternate ModelScript runtime parameter (e.g. run_model_restart.R)
 
   # Load the previous model state, if we've asked for LoadDatastore or StartFrom
+  # TODO: "StartFromModelState" is currently never getting set anywhere - could remove it
   if ( LoadDatastore || "StartFromModelState" %in% names(newRunParam_ls) ) {
     # In the file system, use the currently configured ModelStateFile
     #  if it's not right, that other model needs to be re-run in

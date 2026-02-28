@@ -120,7 +120,7 @@ startVisionEval <- function(
     if ( exists("ve.runtime",ve.env,inherits=FALSE) ) {
       ve.runtime <- ve.env$ve.runtime
     } else {
-      ve.runtime <- Sys.getenv("VE_RUNTIME",NA)
+      ve.runtime <- Sys.getenv("VE_RUNTIME",file.path(ve.home,"runtime"))
     }
   }
 

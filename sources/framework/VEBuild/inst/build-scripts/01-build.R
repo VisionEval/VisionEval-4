@@ -19,7 +19,11 @@ script.contents <- c(
 
 # Build instructions
 build.instructions.builder <- function() {
-  build.finished <- "VEStart" %in% utils::installed.packages(lib.loc=ve.env$ve.lib)[,"Package"] 
+  build.finished <- (
+    "VEStart" %in% utils::installed.packages(lib.loc=ve.env$ve.lib)[,"Package"] &&
+    dir.exists(ve.build.dir) &&
+    "ve-src" %in% dir(ve.build.dir)
+  )
   paste(
     collapse="\n",
     c(
@@ -30,7 +34,7 @@ build.instructions.builder <- function() {
           paste0("  VE_RUNTIME is ",ve.runtime,"\n"),
           paste0("ve.build() to rebuild updated packages into ",ve.lib),
           "ve.build(<packages>,reset=TRUE) to rebuild <packages> (vector of names)",
-          "ve.build(reset=TRUE) to rebuild everyting",
+          "ve.build(reset=TRUE) to rebuild everything (or 've.build(\"reset\")')",
           "ve.run() to start VisionEval"
         )
       } else {
@@ -177,7 +181,10 @@ ve.build.config <- function(config=list(),debug=FALSE, quiet=FALSE) {
     if (debug) cat("Build configuration file:",config.file,"\n")
     yaml::yaml.load_file(config.file)
   } else {
-    if (!quiet) cat("No usable",config.file,": Using default build configuration.\n")
+    if (!quiet) {
+      cat("Using default build configuration.\n")
+      cat("Edit",config.file,"to build other packages.")
+    }
     list()
   }
 
@@ -236,6 +243,8 @@ ve.build.config <- function(config=list(),debug=FALSE, quiet=FALSE) {
   bld.env$build.contriburl.src <- utils::contrib.url(bld.env$ve.repository, "source") # Always build VE source package too
   if ( ! dir.exists(bld.env$build.contriburl) ) dir.create(bld.env$build.contriburl,recursive=TRUE)
   if ( ! dir.exists(bld.env$build.contriburl.src) ) dir.create(bld.env$build.contriburl.src,recursive=TRUE)
+  if ( ! "PACKAGES" %in% bld.env$build.contriburl ) writeLines("",con=file.path(bld.env$build.contriburl,"PACKAGES"))
+  if ( ! "PACKAGES" %in% bld.env$build.contriburl.src ) writeLines("",con=file.path(bld.env$build.contriburl.src,"PACKAGES"))
 
   bld.env$CRAN.mirror <- raw.config$CRAN.mirror # to simplify access when we start downloading dependencies
 

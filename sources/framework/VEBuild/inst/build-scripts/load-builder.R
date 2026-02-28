@@ -19,7 +19,6 @@ load.builder <- function(ve.scripts) {
     CRAN.mirror <- Sys.getenv("VE_CRAN_MIRROR","https://cloud.r-project.org")
   } else {
     ve.lib <- get0("ve.lib",envir=ve.env,ifnotfound=.libPaths()[1])
-    # TODO: make sure ve.lib exists so we can install into it below
     CRAN.mirror <- get0("CRAN.mirror",envir=ve.env,ifnotfound="https://cloud.r-project.org")
   }
 

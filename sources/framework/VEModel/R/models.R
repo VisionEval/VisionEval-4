@@ -1744,8 +1744,8 @@ summarizeSpecs <- function(AllSpecs_ls,stage) {
 ve.model.list <- function(inputs=FALSE,outputs=FALSE,details=NULL,stage=character(0),reset=FALSE) {
   # "inputs" lists the input files (Inp) by package and module (details = field attributes)
   # "outputs" lists the fields that are Set in the Datastore (details = field attributes)
-  # if both are true, we also list the Get elements
-  # "details" FALSE lists units and description plus pacakge/module/group/table/name
+  # if both are true, we also list the Get elements; if both are false we  ONLY list the Get elements
+  # "details" FALSE lists units and description plus package/module/group/table/name
   # "details" TRUE lists all the field attributes (the full data.frame of specSummary)
   # "details" can also be a character vector of specification field names (to generate a subset of details)
   # If "details" is NULL (the default) it selects a small subset of (hopefully useful) field specifications
@@ -2070,7 +2070,7 @@ ve.model.plan <- function(plan="callr",workers=parallelly::availableCores(omit=1
 }
 
 # Run the modelStages
-ve.model.run <- function(run="continue",stage=character(0),watch=TRUE,dryrun=FALSE,limit=0,log="warn") {
+ve.model.run <- function(run="continue",stage=character(0),watch=TRUE,dryrun=FALSE,limit=0,log="warn",reset=FALSE) {
   # run parameter can be
   #   "continue" (run all steps, starting from first incomplete; "reset" is done on the first
   #      incomplete stage and all subsequent ones, then execution continues)
@@ -2078,6 +2078,7 @@ ve.model.run <- function(run="continue",stage=character(0),watch=TRUE,dryrun=FAL
   #   or "reset" (or "restart") in which case we restart from stage 1, but first clear out ResultsDir (no save)
   #
   # "reset" implies deleting any ModelState or Datastore
+  #    (can use reset=TRUE if run=="continue" to force reset; consistent with ve.build syntax)
   # "continue" will unlink/recreate any stages that are not "Run Complete" (including those that
   #    are out of date due to a change in configuration or inputs files, plus any later complete
   #    stages that may StartFrom one of those).
@@ -2106,6 +2107,7 @@ ve.model.run <- function(run="continue",stage=character(0),watch=TRUE,dryrun=FAL
 
   # If save, like reset, but forces SaveDatastore to be TRUE
   # If reset, then go back to the first stage and run from there
+  #   Can use reset=TRUE flag with "continue" to work the same as using "reset"
 
   # If continue, leave existing ResultsDir, but find the first incomplete stage and reset it,
   #   then continue from there.
@@ -2132,6 +2134,12 @@ ve.model.run <- function(run="continue",stage=character(0),watch=TRUE,dryrun=FAL
       writeLog("Invalid 'stage' parameter to $run",Level="error")
     )
   }
+
+  # Process reset flag shortcut
+  # This way, one can do model$run(reset=TRUE) just like ve.build(reset=TRUE)
+  # ve.build also works that way: ve.build("reset") will build everything with reset=TRUE
+  if ( reset && run=="continue") run <- "reset"
+
   # Stages requested manually are passed to self$load and marked as "Out of Date"
 
   completeStatus <- codeStatus("Run Complete")

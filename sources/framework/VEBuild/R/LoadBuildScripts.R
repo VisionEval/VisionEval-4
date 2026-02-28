@@ -25,23 +25,9 @@ loadRuntimeEnvironment <- function() { # Keep this synchronized with VE-Bootstra
   ve.env$ve.lib.name <- "ve-lib"
   ve.env$ve.home <- normalizePath(Sys.getenv("VE_HOME",getwd()),winslash="/",mustWork=FALSE)
   ve.env$ve.build.dir <- Sys.getenv("VE_BUILD",NA)
-  ve.env$ve.runtime <- Sys.getenv("VE_RUNTME",NA)
-  if ( is.na(ve.env$ve.build.dir) ) {
-    if ( getwd() != ve.env$ve.home ) {
-      # If ve.env$ve.home is somewhere else than the working directory, we presume it's because
-      #   the user previously did an end-user (VEStart) installation at that other location
-      # The working directory is the fresh source code location, and ve.home should be set there to
-      #   support VE-Bootstrap.R. TODO: still need to check that makes sense.
-      # We'll try to rebuild into the built subdirectory of ve.home (and always put the finished
-      #   packages into ve.home/ve-lib)
-      ve.env$ve.build.dir <- file.path(ve.env$ve.home,"built")
-      ve.env$ve.home <- getwd()
-    } else {
-      # Park the artifacts in "built" subdirectory
-      # ve-lib itself will go in ve.home
-      ve.env$ve.build.dir <- file.path(ve.env$ve.home,"built")
-    }
-  } else if ( is.na(ve.env$ve.runtime) ) {
+  ve.env$ve.runtime <- Sys.getenv("VE_RUNTIME",NA)
+  if ( is.na(ve.env$ve.build.dir) ) ve.env$ve.build.dir <- file.path(ve.env$ve.home,"built")
+  if ( is.na(ve.env$ve.runtime) ) {
     if ( getwd() != ve.env$ve.home ) {
       # If ve.env$ve.home is somewhere else than working directory, we presume we
       # are in the runtime directory
