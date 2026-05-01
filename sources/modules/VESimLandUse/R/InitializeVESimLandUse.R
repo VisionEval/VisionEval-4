@@ -1055,7 +1055,7 @@ InitializeVESimLandUse <- function(L) {
             "The respective average activity densities are: ",
             paste(RuralActDen_Az[ErrAzones_], collapse = ", "),
             "The highest allowed Bzone activity density is ",
-            round(RuralActDenRng_[2])," households and jobs per acre. ",
+            round(RuralActDenRng_[2],3)," households and jobs per acre. ",
             "Modify relevant values in the 'azone_hh_loc_type_prop.csv', ",
             "'azone_wkr_loc_type_prop.csv', and/or 'azone_loc_type_land_area.csv' ",
             "files to correct the error."
