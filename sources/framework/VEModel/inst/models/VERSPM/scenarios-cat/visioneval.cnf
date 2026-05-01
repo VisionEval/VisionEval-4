@@ -70,7 +70,7 @@ ScenarioElements:
     Label: "Vehicle Characteristics"
     Description: "Proportions of light trucks and average vehicle age"
     Files:
-      - azone_lttrk_prop.csv
+      - azone_hh_lttrk_prop.csv
       - azone_hh_veh_mean_age.csv
     Levels:
       - Name: 1

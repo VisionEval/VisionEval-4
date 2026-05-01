@@ -331,7 +331,7 @@ CalculateAltModeTripsSpecifications <- list(
       ISELEMENTOF = ""
     ),
     visioneval::item(
-      NAME = "D5",
+      NAME = "D5",  # Accessibility measure
       TABLE = "Bzone",
       GROUP = "Year",
       TYPE = "double",
@@ -466,12 +466,6 @@ CalculateAltModeTripsSpecifications <- list(
         "Daily transit person miles traveled by all members of the household"
       )   
       )
-    
-  
-    
-    
-    
-    
     ),
   #Make module callable
   Call = TRUE
@@ -541,8 +535,7 @@ visioneval::savePackageDataset(CalculateAltModeTripsSpecifications, overwrite = 
 CalculateAltModeTrips <- function(L) {
   
   #TODO: get id_name from L or specification?
-  
-  
+
   dataset_name <- "Household"
   id_name <- "HhId"
   
@@ -551,7 +544,7 @@ CalculateAltModeTrips <- function(L) {
   if ("D5" %in% colnames(Bzone_df)) {
     Bzone_df$D5 = Bzone_df$D5 / 10000
   }
-  stopifnot("data.frame" %in% class(Bzone_df))
+  stopifnot("data.frame" %in% class(Bzone_df)) # Might be null?
   
   Marea_df <- data.frame(L$Year[["Marea"]])
   stopifnot("data.frame" %in% class(Marea_df))

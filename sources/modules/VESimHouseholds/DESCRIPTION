@@ -1,8 +1,8 @@
 Package: VESimHouseholds
 Type: Package
 Title: Create Simulated Households with Attributes for VE
-Version: 3.1.1
-Date: 2024-01-23
+Version: 4.0.1
+Date: 2026-05-10
 Author: Brian Gregor [aut, cre],
 Maintainer: Jeremy Raw <jeremy.raw@dot.gov>
 Copyright: AASHTO

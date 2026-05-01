@@ -9,3 +9,11 @@ VERSPM:
       scripts: scripts
       inputs: inputs
       defs: defs
+VE-State:
+  variants:
+    mm:
+      description: VE-State Base with MultiModal Travel Demand Module
+      config: visioneval-mm-vestate.cnf
+      scripts: scripts-vestate
+      inputs: inputs-vestate
+      defs: defs-vestate

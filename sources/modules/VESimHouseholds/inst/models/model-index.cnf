@@ -1,0 +1,14 @@
+# Variant is selected when installing
+# Sample data is also installed
+# Eventually need to document or provide helper function for reducing to template
+VERSPM:
+  variants:
+    newsample:
+      # private model for testing sample replacement for worker assignment
+      private: true
+      description: VERSPM 3.0 (test worker sample)
+      config: visioneval-newsample.cnf
+      scripts: scripts-base
+      inputs: inputs-base
+      defs: defs
+      queries: queries

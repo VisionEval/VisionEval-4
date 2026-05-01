@@ -1,0 +1,21 @@
+Notes:
+- VisionEval.cnf for VERSPM (single stage) Testing Sample Algorithm
+- Model Description: Model, Region, State
+
+# Model description
+Model          : VERSPM 3.0 SAMPLE ALGORITHMS
+Region         : RVMPO
+State          : OR
+
+BaseYear       : 2010
+Years          : [ 2010, 2038 ]
+
+# ModelStages run base and future years using different sample algorithms
+ModelStages:
+  Old-Sample:
+    Scenario       : VERSPM RVMPO Old Sample
+    Description    : Old Worker Sample 2010 + 2038
+  New-Sample:
+    Scenario       : VERSPM RVMPO New Sample
+    Description    : New Worker Sample 2010 + 2038
+    NewWorkerSample: 1 # default 0 uses old sample algorithm

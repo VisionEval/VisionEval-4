@@ -2764,12 +2764,12 @@ findStandardModel <- function( model, variant="", private=FALSE ) {
   if ( "config" %in% configNames ) {
     model_ls$Config <- normalizePath(file.path(model_ls$ModelDir,variantConfig$config))
   } # if no Config, move contents of scripts directory to installPath (hack for classic model)
-  configNames <- configNames[ ! configNames %in% c("config","description","ModelDir","stages") ]
+  configNames <- configNames[ ! configNames %in% c("private","config","description","ModelDir","stages") ]
 
   # Get regular files and directories to copy
   # Anything else listed as a key will become a sub-directory
   # modelTo <- c("scripts","inputs","defs","queries","scenarios")
-  modelTo <- configNames[ ! configNames %in% c("description","config","stages") ]
+  modelTo <- configNames[ ! configNames %in% c("private","description","config","stages") ]
   modelFrom <- unlist( variantConfig[modelTo] )
 
   # Get model stage directories, if any
