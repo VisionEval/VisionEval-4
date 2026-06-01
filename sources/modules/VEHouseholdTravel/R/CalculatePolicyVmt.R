@@ -4,6 +4,7 @@ NULL
 #========================
 #CalculatePolicyVmt.R
 #========================
+# This module is only used in VERPAT and should be relocated.
 #This module models adjusts the VMT for the policies entered for the scenario.
 #The outputs form this module contains 'Policy' as the suffix in their names.
 

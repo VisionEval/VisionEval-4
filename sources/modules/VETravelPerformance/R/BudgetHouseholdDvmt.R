@@ -553,10 +553,10 @@ BudgetHouseholdDvmtSpecifications <- list(
   ),
   #Specify call status of module
   Call = items(
-    CalcDvmt = "CalculateHouseholdDvmt",
-    ReduceDvmt = "ApplyDvmtReductions",
-    CalcVehTrips = "CalculateVehicleTrips",
-    CalcAltTrips = "CalculateAltModeTrips"
+    CalcDvmt = "CalculateHouseholdDvmt", # If we save the original DVMT under another name, we don't need to rerun it here.
+    ReduceDvmt = "ApplyDvmtReductions",  # Never called explicitly
+    CalcVehTrips = "CalculateVehicleTrips", # Uses reduced Dvmt
+    CalcAltTrips = "CalculateAltModeTrips"  # Uses reduced Dvmt
   )
 )
 

@@ -217,7 +217,7 @@ Hh_df$HhType <- "Reg"
 Hh_df$HhType[Hh_df$UNITTYPE == 2] <- "Grp"
 #Remove fields not needed
 Hh_df$SERIALNO <- NULL
-Hh_df$PUMA5 <- NULL
+Hh_df$PUMA5 <- NULL     # TODO: keep this, then later sample only 
 Hh_df$HWEIGHT <- NULL
 Hh_df$PERSONS <- NULL
 Hh_df$BLDGSZ <- NULL

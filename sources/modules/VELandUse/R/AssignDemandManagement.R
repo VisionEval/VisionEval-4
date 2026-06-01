@@ -18,7 +18,7 @@
 #<tab:TdmModel_ls$PropMilesPerWkr_df>
 #
 ### How the Module Works
-#Users provide inputs on the proportion of households residing in each Bzone who participate in individualized marketing programs (IMP) and the proportion of workers working in each Bzone who participate in employee commute options (ECO) programs. These proportions are used in random draws to determine whether a household is an IMP program participant and whether a worker is an ECO program participant. The number of workers is participating is summed for each household.
+#Users provide inputs on the proportion of households residing in each Bzone who participate in individualized marketing programs (IMP) and the proportion of workers working in each Bzone who participate in employee commute options (ECO) programs. These proportions are used in random draws to determine whether a household is an IMP program participant and whether a worker is an ECO program participant. The number of workers participating is summed for each household.
 #
 #The proportional reduction in the DVMT of each household is calculated for IMP program participation and ECO program participation and the maximum of those is used. The maximum value is used rather than combining the values of the two programs because it is likely that there is a substantial amount of overlap in what these programs accomplish. The proportional reduction in VMT due to IMP participation is simply the value specified in the *tdm_parameters.csv* file. The proportional reduction in VMT due to ECO participation is product of the proportional reduction in VMT specified in the *tdm_parameters.csv*, the modeled proportion of household VMT in work travel per worker for the household size, and the number of workers who participate.
 #

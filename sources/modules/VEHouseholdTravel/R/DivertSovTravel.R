@@ -903,7 +903,7 @@ DivertSovTravel <- function(L) {
   MaToHhIdx_Hh <- match(L$Year$Household$Marea, L$Year$Marea$Marea)
   #Add density and freeway lane miles to household data
   L$Year$Household$Density <- L$Year$Bzone$D1B[BzToHhIdx_Hh]
-  L$Year$Household$FwyLaneMiPC <- L$Year$Marea$FwyLaneMiPC[MaToHhIdx_Hh]
+  L$Year$Household$FwyLaneMiPC <- L$Year$Marea$FwyLaneMiPC[MaToHhIdx_Hh] # is this ever used?
 
   #Iterate through Azones and calculate
   #------------------------------------
@@ -940,7 +940,7 @@ DivertSovTravel <- function(L) {
     SovDiversionProp <- L$Year$Azone$PropSovDvmtDiverted[L$Year$Azone$Azone == az]
     TotSovDvmtDiverted <- TotSovDvmt * SovDiversionProp
 
-    #Calculate diversion by household if there is total diversion is not 0
+    #Calculate diversion by household if total diversion is not 0
     #---------------------------------------------------------------------
     if (TotSovDvmtDiverted > 0) {
       #Calculate household DVMT in SOV tours of non-rural households

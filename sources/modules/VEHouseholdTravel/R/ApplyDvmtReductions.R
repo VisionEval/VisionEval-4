@@ -179,9 +179,9 @@ ApplyDvmtReductions <- function(L) {
 }
 
 
-#===============================================================
-#SECTION 4: MODULE DOCUMENTATION AND AUXILLIARY DEVELOPMENT CODE
-#===============================================================
+#==============================================================
+#SECTION 4: MODULE DOCUMENTATION AND AUXILIARY DEVELOPMENT CODE
+#==============================================================
 #Run module automatic documentation
 #----------------------------------
 documentModule("ApplyDvmtReductions")

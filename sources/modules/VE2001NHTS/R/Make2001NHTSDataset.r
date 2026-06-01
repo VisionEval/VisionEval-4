@@ -56,15 +56,20 @@ doPadNum <- function(Num_) {
 #'
 #' This function retrieves a zip archive containing a csv file from a
 #' repository, unzips it, and reads it in as data frame which it returns.
+#' The repository is presumed to have zipped versions of key NHTS data
 #'
 #' @param Repo A string that is the url where the zip archive is located.
 #' @param DatasetName The name of the dataset.
 #' @return A data frame containing the data in the zip archive.
 #' @import utils
+#' @import rjson
 getZipDatasetFromRepo <- function(Repo, DatasetName) {
   ZipArchiveFileName <- paste0(DatasetName, ".zip")
   CsvFileName <- paste0(DatasetName, ".csv")
-  download.file(file.path(Repo, ZipArchiveFileName), ZipArchiveFileName)
+  NhtsPath <- paste(sep="/","https://api.github.com/repos",Repo,"contents/data",ZipArchiveFileName)
+  file.info <- rjson::fromJSON(file=NhtsPath)
+  NhtsURL <- file.info$download_url
+  download.file(NhtsURL, ZipArchiveFileName)
   Data_df <- read.csv(unzip(ZipArchiveFileName), as.is = TRUE)
   file.remove(ZipArchiveFileName, CsvFileName)
   Data_df
@@ -72,21 +77,23 @@ getZipDatasetFromRepo <- function(Repo, DatasetName) {
 
 # Because of a setting in .Rbuildignore, "data-raw" won't be present
 # during the final build, but we will already have done all the
-# following during the documentation phase, so we can jus skip it.
+# following during the documentation phase, so we can just skip it.
 
 if ( dir.exists("data-raw") ) {
   #Identify NHTS data directory
   #----------------------------
-  #Compressed NHTS 2001 public use datasets are available in the following GitHub
-  #repository. This may change in the future.
-  Nhts2001Repo <-
-    "https://raw.githubusercontent.com/gregorbj/NHTS2001/master/data"
-
+  #Compressed NHTS 2001 public use datasets are available in the following GitHub repository. This
+  #may change in the future. Note that it is possible to try swapping in later versions of NHTS by
+  #altering the run parameter in the ve.runtime "visioneval.cnf" file. However that will fail if the
+  #later NHTS does not have all the same fields as 2001 (which is generally not the case). The NHTS
+  #preparation code can be altered later to migrate to a later NHTS.
+  VENHTSRepo <- visioneval::getRunParameter("NHTSRepository",Default="VisionEval/NHTS2001")
+  
   #Load NHTS household data
   #------------------------
   #Download data from repository and process if it has not already been done
   if (!file.exists("data-raw/Hh_df.rda")) {
-    Hh_df <- getZipDatasetFromRepo(Nhts2001Repo, "HHPUB")
+    Hh_df <- getZipDatasetFromRepo(VENHTSRepo, "HHPUB")
     Keep_ <- c("HOUSEID", "AGE_P1", "AGE_P2", "AGE_P3", "AGE_P4", "AGE_P5",
                "AGE_P6", "AGE_P7", "AGE_P8", "AGE_P9", "AGE_P10", "AGE_P11",
                "AGE_P12", "AGE_P13", "AGE_P14", "CENSUS_D", "CENSUS_R", "DRVRCNT",
@@ -120,7 +127,7 @@ if ( dir.exists("data-raw") ) {
   #----------------------
   #Download data from repository and process if it has not already been done
   if (!file.exists("data-raw/Veh_df.rda")) {
-    Veh_df <- getZipDatasetFromRepo(Nhts2001Repo, "VEHPUB")
+    Veh_df <- getZipDatasetFromRepo(VENHTSRepo, "VEHPUB")
     Keep_ <-
       c("HOUSEID", "VEHID", "BESTMILE", "EIADMPG", "GSCOST", "VEHTYPE", "VEHYEAR",
         "VEHMILES" )
@@ -142,7 +149,7 @@ if ( dir.exists("data-raw") ) {
   #---------------------
   #Download data from repository and process if it has not already been done
   if (!file.exists("data-raw/Per_df.rda")) {
-    Per_df <- getZipDatasetFromRepo(Nhts2001Repo, "PERPUB")
+    Per_df <- getZipDatasetFromRepo(VENHTSRepo, "PERPUB")
     Keep_ <-
       c("HOUSEID", "PERSONID", "COMMDRVR", "NBIKETRP", "NWALKTRP", "USEPUBTR",
         "WRKDRIVE", "WRKTRANS", "WORKER", "DTGAS", "DISTTOWK", "DRIVER", "R_AGE",
@@ -165,7 +172,7 @@ if ( dir.exists("data-raw") ) {
   #-------------------------
   #Download data from repository and process if it has not already been done
   if (!file.exists("data-raw/Dt_df.rda")) {
-    Dt_df <- getZipDatasetFromRepo(Nhts2001Repo, "DAYPUB")
+    Dt_df <- getZipDatasetFromRepo(VENHTSRepo, "DAYPUB")
     Keep_ <-
       c("HOUSEID", "TDCASEID", "VEHID", "VEHUSED", "TRPHHVEH","PERSONID",
         "NUMONTRP", "TRPTRANS", "TRPMILES", "TRVL_MIN", "DWELTIME", "PSGR_FLG",
@@ -979,4 +986,4 @@ if ( exists("HhTours_df") ) visioneval::savePackageDataset(HhTours_df, overwrite
 if ( exists( "Per_df" ) ) visioneval::savePackageDataset(Per_df, overwrite = TRUE)
 
 rm( list=grep("_$",ls(),value=TRUE) )
-rm( list=c("Ages_HhPr","Drvs_HhPr","Nhts2001Repo","ToursByHh_df","Transit2001_df","Wkrs_HhPr") )
+rm( list=c("Ages_HhPr","Drvs_HhPr","VENHTSRepo","ToursByHh_df","Transit2001_df","Wkrs_HhPr") )

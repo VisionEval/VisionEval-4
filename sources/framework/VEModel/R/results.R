@@ -357,7 +357,7 @@ ve.resultslist.units <- function(selected=TRUE,display=NULL) {
 ve.resultslist.find <- function(pattern=NULL,Scenario=NULL,Group=NULL,Table=NULL,Name=NULL,select=FALSE) {
   selection <- self$select() # generate a base selection from what is already selected.
   found <-selection$find(pattern=pattern,Scenario=Scenario,Group=Group,Table=Table,Name=Name,as.object=TRUE)
-  # without "select=TRUE", found is an independent selection (not bound to results)
+  # without "select=TRUE", found is an independent selection (list of names not bound to results)
   if ( select ) found <- self$select(found) # create a selection from this set of results
   return( found )
 }

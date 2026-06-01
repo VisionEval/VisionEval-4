@@ -526,6 +526,15 @@ CalculateVehicleOwnCostSpecifications <- list(
       PROHIBIT = c("NA", "< 0"),
       ISELEMENTOF = ""
     ),
+    item( # May not be present depending on module execution order; will "Call" CalculateHouseholdDvmt as needed.
+      NAME = "Dvmt",
+      TABLE = "Household",
+      GROUP = "Year",
+      TYPE = "compound",
+      UNITS = "MI/DAY",
+      PROHIBIT = c("NA", "< 0"),
+      ISELEMENTOF = ""
+    ),
     item(
       NAME = "HhId",
       TABLE = "Vehicle",
@@ -920,9 +929,12 @@ CalculateVehicleOwnCost <- function(L,M) {
   #Calculate annual VMT by vehicle
   #-------------------------------
   #Estimate the household DVMT
-  L$Year$Household$Dvmt <- M$CalcDvmt(L$CalcDvmt)$Year$Household$Dvmt
+  #TODO: if we run CalculateHouseholdDvmt first, we can just Get Household$Dvmt from Datastore
+  if ( is.null(L$Year$Household$Dvmt) ) {
+    L$Year$Household$Dvmt <- M$CalcDvmt(L$CalcDvmt)$Year$Household$Dvmt
+    L$CalcDvmt <- NULL
+  }
   AnnualVmt_Hh <- 365 * L$Year$Household$Dvmt
-  L$CalcDvmt <- NULL
   #Calculate annual household VMT per vehicle
   AveAnnVmtPV_Hh <- AnnualVmt_Hh / L$Year$Household$Vehicles
   AveAnnVmtPV_Hh[L$Year$Household$Vehicles == 0] <- 0

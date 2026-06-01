@@ -343,12 +343,12 @@ PredictWorkers <- function(L) {
   # Could do a data frame with HhIdx_Pr (HhID duplicated for number of persons), PrsnProb_Pr (also duplicated) Then add
   # a column for weighted probability (PrsnProb_Pr/sum(PrsnProb_Pr)) then multiply those by a vector of runif draws.
   # Then sort the data rows descending by the multiplication product and lop off the top W entries, then tabulate.
+  doNew <- visioneval::getRunParameter("NewWorkerSample",Default=0)
   getNumWkr <- function(N_, P_, W) {
     NumHh <- length(N_)
     NumWkr_Hh <- setNames(integer(NumHh), 1:NumHh) #Initialize count of workers
     HhIdx_Pr <- rep(1:length(N_), N_) #Vector of persons with household index
     PrsnProb_Pr <- rep(P_, N_) #Probability that each person is a worker
-    doNew <- visioneval::getRunParameter("NewWorkerSample",Default=0)
     if ( doNew  ) { # separate from parameter call so we can alter it during debugging
       NetProb_Pr <- PrsnProb_Pr/sum(PrsnProb_Pr)   # May not need this to get the relative probabilities right
       NetProb_Pr <- runif(PrsnProb_Pr)*NetProb_Pr  # Bias the uniform distribution by the individual probabilities
@@ -363,10 +363,11 @@ PredictWorkers <- function(L) {
   #Iterate through age groups and Azones and identify number of workers by
   #age group for each household
   PropHhWkr_HtAg <- loadPackageDataset("PropHhWkr_HtAg","VESimHouseholds")
+  extraLog <- ifelse(doNew,"warn","info")
   for (i in 1:length(Ag)) {
     NumWkr_Hh <- integer(NumHh)
     for (az in Az) {
-      visioneval::writeLog(Level="warn",paste("Processing Age Group",Ag[i],"for Azone",az))
+      visioneval::writeLog(Level=extraLog,paste("Processing Age Group",Ag[i],"for Azone",az))
       IsAz <- L$Year$Household$Azone == az
       NumWkr_Hh[IsAz] <- local({
         NumPrsn_ <- L$Year$Household[[Ag[i]]][IsAz]

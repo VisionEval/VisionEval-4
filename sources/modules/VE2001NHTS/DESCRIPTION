@@ -17,7 +17,8 @@ LazyData: TRUE
 LazyDataCompression: bzip2
 Depends: R (>= 4.0.0)
 Imports:
-    visioneval
+    visioneval,
+    rjson
 Suggests:
     knitr
 VignetteBuilder: knitr

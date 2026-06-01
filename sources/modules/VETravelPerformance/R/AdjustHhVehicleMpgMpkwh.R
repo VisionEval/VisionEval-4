@@ -406,11 +406,12 @@ AdjustHhVehicleMpgMpkwhSpecifications <- list(
       SIZE = 0,
       DESCRIPTION = "Flag identifying whether drivers in household are eco-drivers"
     )
-  ),
-  #Specify call status of module
-  Call = items(
-    CalcDvmt = "CalculateHouseholdDvmt"
   )
+#   ,
+#   #Specify call status of module
+#   Call = items(
+#     CalcDvmt = "CalculateHouseholdDvmt"
+#   )
 )
 
 #Save the data specifications list

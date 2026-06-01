@@ -2,6 +2,7 @@
 #CalculateInducedDemand.R
 #===================
 
+# Module is only used in VERPAT and should be moved.
 #This module calculates average daily vehicle miles traveld for households. It also
 #calculates average DVMT, daily consumption of fuel (in gallons), and average daily
 #Co2 equivalent greenhouse emissions for all vehicles.

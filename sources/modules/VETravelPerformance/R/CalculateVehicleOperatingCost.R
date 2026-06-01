@@ -40,7 +40,7 @@
 #The prices (unit costs) of travel by each vehicle are calculated as composite costs which combine out-of-pocket costs and travel time costs. The out-of-pocket unit costs for households (dollars / mile) are calculated as the sum of the unit costs for the following:
 #
 #*  Fuel (energy),
-#*  Mainance, tires and repairs,
+#*  Maintenance, tires and repairs,
 #*  Road use taxes,
 #*  Pollution taxes (e.g. carbon tax),
 #*  Parking charges, and
@@ -1297,12 +1297,17 @@ CalculateVehicleOperatingCost <- function(L) {
   #----------------------------------------------------------
   #Calculate average out-of-pocket costs per mile by household
   AveVehCostPM_Hh <- local({
+    numNA <- function(v) length(which(is.na(v)))
     VehCostPM_Ve <-
       MRTCostRate_Ve + EnergyCostRate_Ve + RoadUseCostRate_Ve +
       ClimateCostRate_Ve + SocialCostRate_Ve + ParkingCostRate_Ve +
       PaydInsCostRate_Ve + CarSvcCostRate_Ve
     tapply(VehCostPM_Ve * DvmtProp_Ve, L$Year$Vehicle$HhId, sum)[L$Year$Household$HhId]
   })
+  # Some households may have no drivers and no vehicles leading to NAs
+  # (group quarter population Age0to14 will do that, but they should always be zero in any case)
+  AveVehCostPM_Hh[is.na(AveVehCostPM_Hh)] <- 0
+  
   #Calculate average social and environmental impacts costs per mile by household
   AveSocEnvCostPM_Hh <- local({
     SocEnvCostPM_Ve <- ClimateImpactsRate_Ve + SocialImpactsRate_Ve

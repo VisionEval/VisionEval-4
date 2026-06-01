@@ -1485,7 +1485,7 @@ doProcessInpSpec <- function(InpSpecs_ls) {
     #   for (i in 1:length(InpSpecs_ls)) {
     #     Spec_ls <- InpSpecs_ls[[i]]
     # TODO: "File" should be an abstract data source/connection
-    # INPUTDIR shoudl describe the connection
+    # INPUTDIR should describe the connection
     # findRuntimeInputFile looks on InputPath by default
     File <- findRuntimeInputFile(Spec_ls$FILE,Param_ls=G$RunParam_ls,StopOnError=FALSE)
     if ( is.na(File) ) {

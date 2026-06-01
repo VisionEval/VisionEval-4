@@ -539,7 +539,7 @@ CalculateVehicleTripsSpecifications <- list(
       ISELEMENTOF = ""
     )
   ),
-  #Specify data to saved in the data store
+  #Specify data to save in the data store
   Set = items(
     item(
       NAME = "VehicleTrips",
