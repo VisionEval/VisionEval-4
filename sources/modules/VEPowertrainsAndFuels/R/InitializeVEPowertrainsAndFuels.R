@@ -439,7 +439,11 @@ InitializeVEPowertrainsAndFuels <- function(L) {
         Warnings_ <<- c(Warnings_, Msg)
         Values_mx <- sweep(Values_mx, 1, rowSums(Values_mx), "/")
         for (nm in colnames(Values_mx)) {
+          # Fixing a subtle bug here: Values_ls[[nm]] may have UNITS attributes and those were not propagated
+          # when the corrected values (from sweep) are re-injected into the Values_ls list.
+          cachedAttributes <- attributes(Values_ls[[nm]])
           Values_ls[[nm]] <- Values_mx[,nm]
+          attributes(Values_ls[[nm]]) <- cachedAttributes
         }
       }
     #Otherwise only need to evaluate single values
@@ -465,7 +469,11 @@ InitializeVEPowertrainsAndFuels <- function(L) {
         Warnings_ <<- c(Warnings_, Msg)
         Values_ <- Values_ / sum(Values_)
         for (nm in names(Values_)) {
+          # Fixing a subtle bug here: Values_ls[[nm]] may have UNITS attributes and those were not propagated
+          # when the corrected values are re-injected into the Values_ls list.
+          cachedAttributes <- attributes(Values_ls[[nm]])
           Values_ls[[nm]] <- Values_[nm]
+          attributes(Values_ls[[nm]]) <- cachedAttributes
         }
       }
     }
