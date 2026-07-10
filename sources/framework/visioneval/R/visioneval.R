@@ -474,7 +474,7 @@ loadModel <- function(
   #==========================================================
   # SAVE RAW MODULE CALLS INTO MODEL STATE FROM PARSED SCRIPT
   #==========================================================
-
+q
   # Use ModuleCalls_df later in runModule
   setModelState(
     list(ModuleCalls_df=parsedScript$ModuleCalls_df), # Full list of calls for current model state/stage
@@ -1083,7 +1083,8 @@ getModuleL <- function(ModuleName, PackageName, RunYear, Instance=character(0), 
 #' @return list returned from module function, with Errors and Warnings as
 #'   attributes.
 #' @export
-runModule <- function(ModuleName, PackageName, RunFor, RunYear, Instance=character(0), StopOnErr = TRUE, ...) {
+runModule <- function(ModuleName, PackageName, RunFor, RunYear,
+  Instance=character(0), LoopIndex=integer(0), StopOnErr = TRUE, ...) {
   if ( ! modelRunning() ) invisible( list(Errors=character(0),Warnings="Model Not Running") )
   
   #Check whether the module should be run for the current run year
@@ -1169,14 +1170,15 @@ runModule <- function(ModuleName, PackageName, RunFor, RunYear, Instance=charact
     #Run module
     funcFormals <- names(formals(M$Func))
     funcArgs                         <- "L=L"
-    if ("M"        %in% funcFormals && exists("Call"))     funcArgs <- c(funcArgs,"M=Call$Func")
-    if ("Instance" %in% funcFormals && length(Instance)>0) funcArgs <- c(funcArgs,"Instance=Instance")
-    if ("..."      %in% funcFormals && ...length()>0)      funcArgs <- c(funcArgs,"...")
+    if ("M"         %in% funcFormals && exists("Call"))      funcArgs <- c(funcArgs,"M=Call$Func")
+    if ("Instance"  %in% funcFormals && length(Instance)>0)  funcArgs <- c(funcArgs,"Instance=Instance")
+    if ("LoopIndex" %in% funcFormals && length(LoopIndex)>0) funcArgs <- c(funcArgs,"LoopIndex=LoopIndex")
     funcCall <- paste0("M$Func(",paste(funcArgs,collapse=", "),")")
     R <- eval(parse(text=funcCall))
 
     #Save results in datastore if no errors from module
-    if (is.null(R$Errors) ) {
+    if (is.null(R$Errors) && is.null(R$Skip) ) {
+      # R$Skip is used in VESnapshot to not save a snapshot if the loop index is not current.
       setInDatastore(R, M$Specs, ModuleName, Year = RunYear, Geo = NULL)
     }
     #Add module errors and warnings if any
@@ -1228,17 +1230,19 @@ runModule <- function(ModuleName, PackageName, RunFor, RunYear, Instance=charact
             getFromDatastore(Call$Specs[[Alias]], RunYear = RunYear, Geo, GeoIndex_ls = GeoIndex_ls[[Alias]])
         }
       }
-      #Run moduled for geographic area
+      #Run modules for geographic area
       funcFormals <- names(formals(M$Func))
-      funcArgs                         <- "L=L"
-      if ("M"        %in% funcFormals && exists("Call"))     funcArgs <- c(funcArgs,"M=Call$Func")
-      if ("Instance" %in% funcFormals && length(Instance)>0) funcArgs <- c(funcArgs,"Instance=Instance")
-      if ("..."      %in% funcFormals && ...length()>0)      funcArgs <- c(funcArgs,"...")
+      funcArgs    <- "L=L"
+      if ("M"         %in% funcFormals && exists("Call"))      funcArgs <- c(funcArgs,"M=Call$Func")
+      if ("Instance"  %in% funcFormals && length(Instance)>0)  funcArgs <- c(funcArgs,"Instance=Instance")
+      if ("LoopIndex" %in% funcFormals && length(LoopIndex)>0) funcArgs <- c(funcArgs,"LoopIndex=Instance")
+      if ("..."       %in% funcFormals && ...length()>0)       funcArgs <- c(funcArgs,"...")
       funcCall <- paste0("M$Func(",paste(funcArgs,collapse=", "),")")
       R <- eval(parse(text=funcCall))
 
       #Save results in datastore if no errors from module
-      if (is.null(R$Errors)) {
+      if (is.null(R$Errors) && is.null(R$Skip)) {
+        # R$Skip is used in VESnapshot to not save a snapshot if the loop index is not current.
         setInDatastore(R, M$Specs, ModuleName, RunYear, Geo, GeoIndex_ls)
       }
       #Add module errors and warnings if any
@@ -1447,7 +1451,7 @@ runScript <- function(Module, Specification=NULL, RunFor, RunYear, writeDatastor
       R <- M$Func(L)
     }
     #Save results in datastore if no errors from module
-    if (writeDatastore && is.null(R$Errors)) {
+    if (writeDatastore && is.null(R$Errors) && is.null(R$Skip)) {
       setInDatastore(R, M$Specs, ModuleName, Year = RunYear, Geo = NULL)
     }
     #Add module errors and warnings if any
@@ -1497,7 +1501,7 @@ runScript <- function(Module, Specification=NULL, RunFor, RunYear, writeDatastor
         R <- M$Func(L)
       }
       #Save results in datastore if no errors from module
-      if (writeDatastore && is.null(R$Errors)) {
+      if (writeDatastore && is.null(R$Errors) && is.null(R$Skip)) {
         setInDatastore(R, M$Specs, ModuleName, RunYear, Geo, GeoIndex_ls)
       }
       #Add module errors and warnings if any

@@ -60,8 +60,7 @@ CalculateCongestionBaseSpecifications <- list(
       ISELEMENTOF = "",
       UNLIKELY = "",
       TOTAL = "",
-      DESCRIPTION = "Proportion of the freeway and arterial networks with ITS for
-      incident reduction"
+      DESCRIPTION = "Proportion of the freeway and arterial networks with ITS for incident reduction"
     )
   ),
   #Specify data to be loaded from data store

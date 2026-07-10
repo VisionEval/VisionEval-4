@@ -1164,7 +1164,7 @@ fetchModuleData <- function(ModuleName, PackageName, Year, Geo = NULL, Instance=
   #Load the package and module
   #---------------------------
   Function <- paste0(PackageName, "::", ModuleName)
-  Specs <- paste0(PackageName, "::", ModuleName, "Specifications")
+  # Specs <- paste0(PackageName, "::", ModuleName, "Specifications")
   M <- list()
   M$Func <- eval(parse(text = Function))
   M$Specs <- processModuleSpecs(getModuleSpecs(ModuleName,PackageName,Instance=Instance))
@@ -1377,7 +1377,10 @@ getModuleSpecs <- function(ModuleName, PackageName, AllSpecs_ls=NA, Instance=cha
 
     Args <- character(0)
     if ( wantAllSpecs && is.list(AllSpecs_ls) && isTRUE(spec_ls$Specs) ) Args[length(Args)+1] <- "AllSpecs_ls=AllSpecs_ls"
-    if ( wantInstance && length(Instance)==1 && nzchar(Instance) ) Args[length(Args)+1] <- "Instance=Instance"
+    if ( wantInstance && length(Instance)==1 && nzchar(Instance) ) {
+      Args[length(Args)+1] <- "Instance=Instance"
+      writeLog(paste0("Specification retrieved for Instance=",Instance),Level="info")
+    }
     if ( wantCache && Cache ) Args[length(Args)+1] <- "Cache=TRUE"
     Args <- paste0("(",paste(collapse=",",Args),")")
     spec_ls <- eval(parse(text = paste0(specFunc,Args)))

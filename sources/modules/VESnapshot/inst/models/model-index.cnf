@@ -5,21 +5,21 @@ VESnap:
   variants:
     base:
       # "description" is used to echo back what is being installed
-      description: VESnapshot Test Model
+      description: VESnapshot Snapshot Test Model
       config: visioneval-snapshot.cnf
       scripts: scripts-snapshot
       inputs: inputs
       defs: defs-snapshot
-      snapshot: snapshot
+      snap-snapshot: snapshot
     snapshot: # same as 'base'
-      description: VESnapshot Test Model
+      description: VESnapshot Snapshot Test Model
       config: visioneval-snapshot.cnf
       scripts: scripts-snapshot
       inputs: inputs
       defs: defs-snapshot
       snap-snapshot: snapshot
     dynamic:  # tests a very simple dynamic specification
-      description: VESnapshot Test Model
+      description: VESnapshot Dynamic Test Model
       config: visioneval-dynamic.cnf
       scripts: scripts-dynamic
       inputs: inputs

@@ -623,7 +623,9 @@ getUnits <- function(Type_,envir=modelEnvironment()) {
 #' parse the list of module calls from the ModelScriptFile
 #'
 #' Process the raw list of module calls and their parameters from the ModelScriptFile and expand
-#' them into a detailed list of input/output specifications.
+#' them into a detailed list of input/output specifications. Note that called modules can only
+#' have the most basic dynamic specifications (i.e. no subsetting by Instance as in
+#' VESnapshot::Snapshot.R).
 #'
 #' @param ModuleCalls_df a list of module calls returned from \code{parseModelScript}
 #' @param AlreadyInitialized a character vector of names of packages that
@@ -677,7 +679,8 @@ parseModuleCalls <- function( ModuleCalls_df, AlreadyInitialized=character(0), R
         PackageName = Pkg,
         RunFor = "AllYears",
         RunYear = "Year",
-        Instance = NA
+        Instance = NA,
+        LoopIndex = NA
       )
       Add_ls[[Pkg]] <- Add_df
     }
@@ -736,6 +739,8 @@ parseModuleCalls <- function( ModuleCalls_df, AlreadyInitialized=character(0), R
     AllSpecs_ls[[i]]$PackageName <- PackageName
     Instance <- ModuleCalls_df$Instance[i]
     AllSpecs_ls[[i]]$Instance <- Instance
+    LoopIndex <- ModuleCalls_df$LoopIndex[i]
+    AllSpecs_ls[[i]]$LoopIndex <- LoopIndex
     AllSpecs_ls[[i]]$RunFor <- ModuleCalls_df$RunFor[i]
     names(AllSpecs_ls)[i] <- paste0(PackageName,"::",ModuleName)
     #Check module availability
@@ -2049,7 +2054,7 @@ ModelElementNames <- c(
 )
 ModelElementsRegex <- paste(ModelElementNames,collapse="|")
 
-ModuleCallNames <- c("ModuleName","PackageName","RunFor","Instance")
+ModuleCallNames <- c("ModuleName","PackageName","RunFor","Instance","LoopIndex")
 ScriptCallNames <- c("Module","Specification","RunFor","ModuleType")
 
 normalizeElementFields <- function(Elements_ls,NeededNames) {

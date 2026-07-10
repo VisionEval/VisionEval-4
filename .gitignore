@@ -14,4 +14,7 @@ runtime/
 sources/external/
 plan.txt
 Raw-release.json
+VisionEval.Rproj
 ODOT*
+r.version
+visioneval.cnf.sample
