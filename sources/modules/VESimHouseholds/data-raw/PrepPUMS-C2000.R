@@ -4,6 +4,7 @@
 library(data.table)
 library(tools)
 
+# Internal helper function to make the datasets with limited fields
 process_2000_pums <- function(PumsFile, GetPumas='ALL') {
   #Read in file and split out household and person tables
   Pums_ <- readLines(PumsFile)
@@ -44,6 +45,9 @@ process_2000_pums <- function(PumsFile, GetPumas='ALL') {
     H_df <- H_df[H_df$PUMA5 %in% GetPumas,]
   }
 
+  # Make sure no NA values in HINC field
+  if ( any(is.na(H_df$HINC)) ) H_df$HINC[is.na(H_df$HINC)] <- 0
+
   #Identify the person data to extract
   PFields_ls <-
   list(
@@ -68,17 +72,9 @@ process_2000_pums <- function(PumsFile, GetPumas='ALL') {
 
 # Downloads and processes legacy 2000 PUMS data 
 getDecPUMS <- function(STATE, output_dir = NA) {
-  #VARS 
-  state_codes <- fread('state.txt') 
-  state_codes <- setNames(state_codes$STATE, state_codes$STUSAB) 
-  base_url = 'https://www2.census.gov/census_2000/datasets/PUMS/FivePercent' 
 
-  if(length(STATE) > 2 & !is.numeric(STATE)) { 
-    STATE <- state.abb[match(toTitleCase(STATE),state.name)] 
-  } 
-  STATE_NAME <- state.name[match(toupper(STATE),state.abb)] 
-  if(!is.numeric(STATE)) STATE_NUM <- state_codes[toupper(STATE)] 
   # Download the PUMS data to tempfile and load directly to data table 
+  base_url = 'https://www2.census.gov/census_2000/datasets/PUMS/FivePercent' 
   url <- file.path(
     base_url,
     STATE_NAME, 

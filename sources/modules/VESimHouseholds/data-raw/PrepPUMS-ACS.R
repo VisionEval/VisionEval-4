@@ -4,7 +4,7 @@
 library(data.table)
 library(tools)
 
-# Function to process PUMS as it is read in
+# Internal function to process PUMS via temporary unzip file
 process_acs_pums <- function(PumsFile, type, GetPumas='ALL') {
   # ACS PUMS to legacy Census PUMS fields
   # Make any modifications here as necessary
@@ -40,21 +40,16 @@ process_acs_pums <- function(PumsFile, type, GetPumas='ALL') {
   # Rename ACS PUMS fields to match legacy Census PUMS fields
   setnames(df, colNames[[type]], names(colNames[[type]]))
 
+  # Fix NA in HINC field to be 0 since CreateEstimationDatasets.R
+  # rejects NA values.
+  if ( "HINC" in names(df) && any(is.na(df$HINC)) ) df$HINC[is.na(df$HINC)] <- 0
+
   return(df)
 }
 
 # Downloads and processes post-2000 PUMS
 # STATE must be 2-digit state code from census geography
 getACSPUMS <- function(STATE, YEAR='2024', GetPumas='ALL', output_dir=".", save_zip = T) { 
-  #VARS 
-#   try({ 
-#     state_codes <- fread('state.txt') 
-#     state_codes <- setNames(state_codes$STATE, state_codes$STUSAB) 
-#   }) 
-#   if(length(STATE) > 2 & !is.numeric(STATE)) { 
-#     STATE <- tolower(state.abb[match(toTitleCase(STATE),state.name)])
-#   }
-  # Download the PUMS data to tempfile and load directly to data table 
   base_url = 'https://www2.census.gov/programs-surveys/acs/data/pums'
   PUMS <- lapply(
     c('p', 'h'), function(f) { 
