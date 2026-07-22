@@ -115,7 +115,7 @@ getBuildEnvironment <- function() {
 # @param listtargets if TRUE just report what packages would be built and exit
 # @return data.frame of packages and status (unchanged, built, failed)
 ve.build <- function(
-  targets="",
+  targets="all",
   reset=FALSE,
   check=reset,
   confirm=interactive(),
@@ -126,6 +126,18 @@ ve.build <- function(
 
   ve.build.config(config=config,debug=debug) # Loads "ve.build.env"
 
+  # Add extended syntax to match structure of VEModel$run
+  if ( length(targets)==1 ) {
+    if ( targets=="all" ) {
+      targets <- "" # empty list says do everything
+    } else if ( targets=="reset" ) {
+      if ( ! reset ) {
+        reset <- TRUE
+        if ( missing(check) ) check <- TRUE
+      }
+      targets <- ""
+    }
+  }
   pkg.desc <- ve.get.targets(targets,debug=debug)
   if ( listtargets ) {
     return(pkg.desc)

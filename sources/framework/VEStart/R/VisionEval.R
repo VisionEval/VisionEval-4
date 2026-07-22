@@ -224,6 +224,7 @@ startup.files <- c(
   ".Renviron",
   ".Rprofile",
   "visioneval.cnf.sample",
+  "ve-build-config-default.yml",
   "VisionEval.Rproj",
   "r.version"
 )
@@ -357,6 +358,7 @@ ve.setup.environ <- function(ve.home,ve.runtime,setupHome=FALSE,overwrite=FALSE)
     # Directly copy over .Rprofile and VisionEval.Rproj (no template modifications needed)
     file.copy(system.file("startup/Rprofile.default.R",package="VEStart",mustWork=TRUE),file.path(location,".Rprofile"),overwrite=TRUE)
     file.copy(system.file("startup/VisionEval.Rproj",package="VEStart",mustWork=TRUE),location,overwrite=TRUE)
+    file.copy(system.file("startup/ve-build-config-default.yml",package="VEStart",mustWork=TRUE),location,overwrite=TRUE)
     file.copy(system.file("startup/visioneval.cnf.sample",package="VEStart",mustWork=TRUE),location,overwrite=TRUE)
     if ( file.exists( has.Rdata <- file.path(location,".Rdata")) ) file.copy(has.Rdata,file.path(location,"previous.Rdata"))
     save(list=character(0),file=file.path(location,".Rdata")) # double click .Rdata to run fully-installed RGUI

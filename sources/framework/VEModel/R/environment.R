@@ -648,11 +648,13 @@ showModelIndex <- function(reset=FALSE, private=FALSE) {
 # INITIALIZE WALKTHROUGH
 #' Establish a temporary runtime to try out walkthrough operations and load VEModel
 #' Takes no parameters and sets up a working environment (adjusting ve.runtime)
+#' @param reset If TRUE, clear the walkthrough environment before proceeding
+#' @global setup.walkthrough
 #' @return NULL
 #' @export
 ve.walkthrough <- function(reset=FALSE) {
   wkthru.start <- system.file("walkthrough/00-setup.R",package="VEModel")
   source(wkthru.start)
-  setup.walkthrough(reset)
+  setup.walkthrough(reset) # defined in walkthrough/00-setup.R
   utils::browseURL(system.file("walkthrough",package="VEModel"))
 }
