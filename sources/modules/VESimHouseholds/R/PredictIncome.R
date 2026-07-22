@@ -164,7 +164,7 @@ estimateIncomeModel <- function(Data_df, StartTerms_) {
 load("data/Hh_df.rda")
 #Select regular households and give 0 income households an income of 1
 Hh_df <- Hh_df[Hh_df$HhType == "Reg",]
-Hh_df$Income[Hh_df$Income == 0] <- 1
+Hh_df$Income[Hh_df$Income == 0|is.na(Hh_df$Income)] <- 1
 #Define the start terms
 StartTerms_ <-
   c("PowPerCapInc",
@@ -256,7 +256,7 @@ visioneval::savePackageDataset(HHIncModel_ls, overwrite = TRUE)
 #Load the household estimation data
 load("data/Hh_df.rda")
 Hh_df <- Hh_df[Hh_df$HhType == "Grp",]
-Hh_df$Income[Hh_df$Income == 0] <- 1
+Hh_df$Income[Hh_df$Income == 0|is.na(Hh_df$Income)] <- 1
 #Define the start terms
 StartTerms_ <-
   c("PowPerCapInc",
