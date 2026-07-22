@@ -377,9 +377,9 @@ visioneval::savePackageDataset(CalculateHouseholdDvmtSpecifications, overwrite =
 #' @import visioneval dplyr purrr tidyr pscl
 #' @importFrom splines ns
 #' @importFrom stats setNames
+#' @importFrom stringr str_extract_all
 #' @export
 CalculateHouseholdDvmt <- function(L) {
-  #TODO: get id_name from L or specification?
   dataset_name <- "Household"
   id_name <- "HhId"
   y_name <- "AADVMT"
@@ -433,6 +433,7 @@ CalculateHouseholdDvmt <- function(L) {
                          dataset_name, id_name, y_name, SegmentCol_vc)
   Preds <- Preds %>%
     mutate(y=ifelse(is.na(y) | y < 0, 0.01, y))
+
   #Apply the 95th percentile model
   #-------------------------------
   D_df$Dvmt <- Preds[["y"]]

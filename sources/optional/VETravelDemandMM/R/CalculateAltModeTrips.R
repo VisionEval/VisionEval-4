@@ -469,8 +469,7 @@ CalculateAltModeTripsSpecifications <- list(
     ),
   #Make module callable
   Call = TRUE
-  
-  
+
 )
 
 #Save the data specifications list
@@ -534,8 +533,6 @@ visioneval::savePackageDataset(CalculateAltModeTripsSpecifications, overwrite = 
 #' @export
 CalculateAltModeTrips <- function(L) {
   
-  #TODO: get id_name from L or specification?
-
   dataset_name <- "Household"
   id_name <- "HhId"
   
@@ -658,7 +655,8 @@ CalculateAltModeTrips <- function(L) {
   stopifnot(all(SegmentCol_vc %in% names(D_df)))
   
   Preds <- DoPredictions(Model_df, D_df,
-                         dataset_name, id_name, y_name, SegmentCol_vc, combine_preds=FALSE)
+                         dataset_name, id_name, y_name, SegmentCol_vc, combine_preds=FALSE,
+                         merge_preds=FALSE)
   
   # fill NA with 0s - produced with negative predictions before inversing power transformation
   Preds <- Preds %>%
@@ -685,7 +683,8 @@ CalculateAltModeTrips <- function(L) {
   stopifnot(all(SegmentCol_vc %in% names(D_df)))
   
   Preds <- DoPredictions(Model_df, D_df,
-                         dataset_name, id_name, y_name, SegmentCol_vc, combine_preds=FALSE)
+                         dataset_name, id_name, y_name, SegmentCol_vc, combine_preds=FALSE,
+                         merge_preds=FALSE)
   
   # fill NA with 0s - produced with negative predictions before inversing power transformation
   Preds <- Preds %>%
@@ -712,7 +711,8 @@ CalculateAltModeTrips <- function(L) {
   stopifnot(all(SegmentCol_vc %in% names(D_df)))
   
   Preds <- DoPredictions(Model_df, D_df,
-                         dataset_name, id_name, y_name, SegmentCol_vc, combine_preds=FALSE)
+                         dataset_name, id_name, y_name, SegmentCol_vc, combine_preds=FALSE,
+                         merge_preds=FALSE)
   
   # fill NA with 0s - produced with negative predictions before inversing power transformation
   Preds <- Preds %>%

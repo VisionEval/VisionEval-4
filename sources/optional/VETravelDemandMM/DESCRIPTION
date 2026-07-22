@@ -19,6 +19,7 @@ Imports:
     splines,
     tidyr,
     pscl,
+    stringr,
     visioneval
 Suggests:
     knitr,

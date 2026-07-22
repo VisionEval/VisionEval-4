@@ -21,6 +21,10 @@
 #'   Model_df is used for segmentation
 #' @param combine_preds A logical flag indicating whether to combine predictions
 #'   for multi-step models (default FALSE)
+#' @param merge_preds A logical flag indicating whether to reorder
+#'   all the predictions by id_name (used if SegmentCol creates
+#'   subsets of the database rather than different model regimes; see
+#'   CalculateAltModeTrips versus CalculateHouseholdDvmt)
 #' @return A list containing the components specified in the Set specifications
 #'   for the module along with: LENGTH: A named integer vector having a single
 #'   named element, "Household", which identifies the length (number of rows) of
@@ -35,7 +39,9 @@
 #' @export
 #'
 DoPredictions <- function(Model_df, Dataset_df,
-                           dataset_name, id_name, y_name, SegmentCol_vc=NULL, combine_preds=FALSE) {
+                           dataset_name, id_name, y_name, SegmentCol_vc=NULL, combine_preds=FALSE,
+                           merge_preds=TRUE
+                         ) {
   
   ## change the old nest and unnest function to be compatible with new tidyr
   nest <- nest_legacy
@@ -78,7 +84,7 @@ DoPredictions <- function(Model_df, Dataset_df,
   # other functions to it
   if ( is.null(SegmentCol_vc) ) {
     msg <- "SegmentCol_vc not defined in VETravelDemandMM::DoPredictions, line 81"
-    writeLog(msg)
+    writeLog(msg,Level="error")
     stop(msg)
   }
   if (combine_preds & "step" %in% names(Preds_lcdf)) {
@@ -90,10 +96,33 @@ DoPredictions <- function(Model_df, Dataset_df,
       ungroup()
   }
 
-  Preds_lcdf %>%
+  Preds_lcdf <- Preds_lcdf %>%
     mutate(id=map(data, id_name)) %>%
     unnest(id, y)
 
+  if ( merge_preds ) {
+    # Get the Preds back in the same order as D_df$HhId
+    # Can't just sort by id since it's a character string rather than
+    # numeric. So we'll extract the numeric index, then rearrange
+    # the predictions to be in that order, then drop the temporary
+    # order field.
+
+    p_order <- as.integer(unlist(str_extract_all(Preds_lcdf$id,"\\d+")))
+    Preds_lcdf <- Preds_lcdf %>% mutate(order=p_order) %>% arrange(order) %>% select(-order)
+
+    if ( ! all(Preds_lcdf$id == Dataset_df[[id_name]]) ) {
+      msg <- c(
+        "Error in VETravelDemandMM::DoPredictions",
+        "Ungrouping grouped predictions failed to get results in correct order."
+      )
+      writeLog(msg[1],Level="error")
+      writeLog(msg[2],Level="error")
+      # stop(msg[1],", see Log for more information.")
+      browser()
+    }
+  }
+
+  return( Preds_lcdf )
 }
 
 #' internal function that handles pass a list column of a data frame to another
