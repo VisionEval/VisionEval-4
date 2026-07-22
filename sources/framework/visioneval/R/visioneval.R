@@ -1074,6 +1074,8 @@ getModuleL <- function(ModuleName, PackageName, RunYear, Instance=character(0), 
 #' @param RunYear A string identifying the run year.
 #' @param Instance Name of an instance if module appears more than
 #'   once in the model script
+#' @param LoopIndex Set to the loop index if module is called inside
+#'   a ModelScript Loop
 #' @param StopOnErr a logical (default TRUE); if FALSE, report errors
 #' and continue anyway
 #' @param ... Additional parameters passed to the ModuleFunction at

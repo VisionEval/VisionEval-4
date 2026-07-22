@@ -88,6 +88,8 @@ getRuntimeEnvironment <- function() {
 #' @param ve.runtime Location for VE_RUNTIME where VisionEval will run ("models" directory)
 #' @param overwrite If TRUE, force rewrite of startup files in VE_RUNTIME, otherwise continue if they exist
 #' @param ve.lib.name Character string with name of ve-lib within VE_HOME (default "ve-lib")
+#' @param setupHome If TRUE, also place the startup files in VE_HOME location (skipping existing
+#' files unless 'overwrite' is TRUE too)
 #' @return location of VE_RUNTIME, invisibly
 #' @import utils tcltk
 #' @export
@@ -270,7 +272,7 @@ checkSetup <- function(ve.home,ve.runtime,overwrite=FALSE) {
   } else good.r.version <- TRUE # it doesn't exist or we're overwriting it, so we will carry on with this.R
 
   # Do we have launch.bat for this R version?
-  launch.bat <- paste0("launch_R",this.R,".bat")
+  launch.bat <- paste0("launch_R",ve.env$this.R,".bat")
   runtime.launch.bat <- file.path(ve.runtime,launch.bat)
   runtime.files <- c(runtime.files,runtime.launch.bat)
   home.launch.bat <- file.path(ve.home,launch.bat)

@@ -220,7 +220,7 @@ processEstimationInputs <- function(Inp_ls, FileName, ModuleName) {
     #   Spec_ls <- Inp_ls[[i]]
     DatasetName <- Spec_ls$NAME
     Data_ <- Data_df[[DatasetName]]
-    writeLog(paste("Convert",DatasetName,"to type",ColClasses_[DatasetName]),Level="info")
+    # writeLog(paste("Convert",DatasetName,"to type",ColClasses_[DatasetName]),Level="info")
     #Calculate SIZE of data if character data
     #This is only necessary because checkDataConsistency requires a SIZE attribute
     if (typeof(Data_) == "character") {
