@@ -506,6 +506,8 @@ ve.build.one.package <- function(pkg,reset=FALSE,check=TRUE,debug=0) {
     if ( debug ) {
       cat(" Still missing dependencies:\n") # DEBUG - don't really need to see this until we've been over the list a few times
       print(pkg.deps[missing.deps])         # DEBUG
+    } else {
+      cat(" Deferred due to unbuilt dependencies.\n")
     }
     return(FALSE) # hopefully try again after building more possible dependencies
   }
