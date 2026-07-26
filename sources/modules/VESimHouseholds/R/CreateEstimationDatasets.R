@@ -53,7 +53,7 @@ PumsHhInp_ls <- items(
   item(
     NAME = "HINC",
     TYPE = "double",
-    PROHIBIT = c("NA"),
+#    PROHIBIT = c("NA"),
     ISELEMENTOF = "",
     UNLIKELY = "",
     TOTAL = ""
