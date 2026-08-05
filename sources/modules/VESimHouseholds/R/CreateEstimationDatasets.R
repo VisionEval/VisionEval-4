@@ -144,6 +144,7 @@ rm(AgeGroup_, IsWkr_, AgeGroup_ls, AgeWkr_df)
 
 #Add Group and Worker tabulations to Hh_df
 #-----------------------------------------
+
 for( nm in names(AgeGroupTab_df)) {
   Hh_df[[nm]] <- AgeGroupTab_df[as.character(Hh_df$SERIALNO), nm]
 }
@@ -156,6 +157,17 @@ rm(nm, WorkerTab_df)
 #Process group quarters population
 #---------------------------------
 #Remove institutionalized group quarters population
+# WARNING: Hack for ACS data
+# PUMS 2000:
+#     0 = Housing unit
+#     1 = Institutional group quarters
+#     2 = Noninstitutional group quarters
+# PUMS ACS:
+#     1 = Housing unit
+#     2 = Institutional group quarters
+#     3 = Noninstitutional group quarters
+if ( min(Hh_df$UNITTYPE)==1 ) Hh_df$UNITYTPE <- Hh_df$UNITTYPE-1
+
 Hh_df <- Hh_df[Hh_df$UNITTYPE != 1,]
 #Add personal income data for noninstitutionalized group quarters population
 GQId_ <- Hh_df$SERIALNO[Hh_df$UNITTYPE == 2]

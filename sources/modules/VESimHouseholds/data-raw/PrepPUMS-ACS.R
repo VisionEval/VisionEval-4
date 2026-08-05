@@ -14,6 +14,7 @@ process_acs_pums <- function(PumsFile, type, GetPumas='ALL') {
       PUMA5 = list(acsname='PUMA', class='character'),
       HWEIGHT = list(acsname='WGTP', class='numeric'),
       UNITTYPE = list(acsname='TYPEHUGQ', class='numeric'),
+      # TODO: TYPEHUGQ has different codes (1=Housing Unit; 2=Institutionalize; 3=Noninstitutionalized)
       PERSONS = list(acsname='NP', class='numeric'),
       BLDGSZ = list(acsname='BLD', class='character'),
       HINC = list(acsname='HINCP', class='numeric')
@@ -41,8 +42,18 @@ process_acs_pums <- function(PumsFile, type, GetPumas='ALL') {
   setnames(df, colNames[[type]], names(colNames[[type]]))
 
   # Fix NA in HINC field to be 0 since CreateEstimationDatasets.R
-  # rejects NA values.
   if ( "HINC" in names(df) && any(is.na(df$HINC)) ) df$HINC[is.na(df$HINC)] <- 0
+
+  # Recode UNITTYPE by subtracting 1
+  # PUMS 2000:
+  #     0 = Housing unit
+  #     1 = Institutional group quarters
+  #     2 = Noninstitutional group quarters
+  # PUMS ACS:
+  #     1 = Housing unit
+  #     2 = Institutional group quarters
+  #     3 = Noninstitutional group quarters
+  if ( "UNITTYPE" in names(df) ) df$UNITTYPE <- df$UNITTYPE-1
 
   return(df)
 }
