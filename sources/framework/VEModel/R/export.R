@@ -358,8 +358,12 @@ ve.exporter.init <- function(Model,load=NULL,tag="default",connection=NULL,parti
       partition <- as.character(partition) # it may be a list if it came from visioneval.cnf
       names(partition) <- pnames
       partition
-    } else if ( is.character(modelConfig$Partition) ) {
-      modelConfig$Partition
+    } else if ( is.list(modelConfig$Partition) || is.character(modelConfig$Partition) ) {
+      partition <- modelConfig$Partition
+      pnames <- names(partition)
+      partition <- as.character(partition) # it may be a list if it came from visioneval.cnf
+      names(partition) <- pnames
+      partition
     } else defaultConfiguration$Partition
 
     # Set up connection (built up the other way from partition since we'll
@@ -1228,7 +1232,7 @@ connectionList <- list(
 #' @return A VEConnection (or derived) object giving access to the VisionEval results in `path`
 #' @export
 makeVEConnection <- function(Model,config=list(driver="csv"),reopen=FALSE,hive=FALSE) {
-  # Usually called from within VEExportef initialization, which will provide
+  # Usually called from within VEExporter initialization, which will provide
   #   useful connection defaults
   # Find driver class from config (default is "csv")
   driver <- if ( ! "driver" %in% names(config) ) "csv" else config$driver
