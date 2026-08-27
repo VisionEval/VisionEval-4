@@ -374,6 +374,9 @@ estimateCongestionModel <- function() {
     # Name MetroDmdLvls_ with their positions so that information is preserved
     names(MetroDmdLvls_) <- 1:length(MetroDmdLvls_)
 
+    # TODO: make this work with higher levels of lane miles
+    # Try changing upper limits
+
     #Define function to choose the metropolitan area sample
     #------------------------------------------------------
     idSample <- function(Lvl) {
@@ -436,8 +439,8 @@ estimateCongestionModel <- function() {
   #Calculate freeway and arterial congested DVMT and DVHT tables
   #-------------------------------------------------------------
   list(
-    Fwy = createLookupTable(FwyDemandLvl_, FwyCongVmtProp_df, c(6000, 24000)),
-    Art = createLookupTable(ArtDemandLvl_, ArtCongVmtProp_df, c(2000, 9000))
+    Fwy = createLookupTable(FwyDemandLvl_, FwyCongVmtProp_df, c(6000, 50000)), # 24000)), # Change to 50000
+    Art = createLookupTable(ArtDemandLvl_, ArtCongVmtProp_df, c(2000, 15000))  # 9000))   # Change to 15000
   )
 }
 
