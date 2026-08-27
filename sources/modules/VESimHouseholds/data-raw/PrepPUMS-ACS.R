@@ -41,8 +41,19 @@ process_acs_pums <- function(PumsFile, type, GetPumas='ALL') {
   # Rename ACS PUMS fields to match legacy Census PUMS fields
   setnames(df, colNames[[type]], names(colNames[[type]]))
 
+  # Limit PUMS data to GetPumas list
+  if ( type=="h" && ( length(GetPumas)>1 || GetPumas[1] != "ALL" ) ) {
+    if ( all(GetPumas %in% df$PUMA5) ) {
+      df <- df[ df$PUMA5 %in% GetPumas, ]
+    } else {
+      message("Missing PUMAs requested:")
+      print( GetPumas[ ! GetPumas %in% df$PUMA5 ] )
+      stop("Missing PUMAs")
+    }
+  } # person file will include all records and get trimmed later when the VESimHouseholds package is built
+
   # Fix NA in HINC field to be 0 since CreateEstimationDatasets.R
-  if ( "HINC" in names(df) && any(is.na(df$HINC)) ) df$HINC[is.na(df$HINC)] <- 0
+  if ( "HINC" %in% names(df) && any(is.na(df$HINC)) ) df$HINC[is.na(df$HINC)] <- 0
 
   # Recode UNITTYPE by subtracting 1
   # PUMS 2000:
@@ -53,7 +64,7 @@ process_acs_pums <- function(PumsFile, type, GetPumas='ALL') {
   #     1 = Housing unit
   #     2 = Institutional group quarters
   #     3 = Noninstitutional group quarters
-  if ( "UNITTYPE" in names(df) ) df$UNITTYPE <- df$UNITTYPE-1
+  if ( "UNITTYPE" %in% names(df) ) df$UNITTYPE <- df$UNITTYPE-1
 
   return(df)
 }
