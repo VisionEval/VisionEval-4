@@ -185,17 +185,21 @@ ve.build.config <- function(config=list(),debug=FALSE, quiet=FALSE) {
 
   bld.env$ve.wantdocs <- TRUE
 
-  config.file <- "ve-build-config.yml"
-  if ( exists("ve.home") ) { # look here for build configuration
-    config.file <- file.path(ve.home,config.file)
-  }
+  config.file.root <- "ve-build-config.yml"
+
+  # Look in current directory, then ve.runtime, then ve.home for candidate config.file
+  
+  config.file <- file.path(c(getwd(),ve.runtime,ve.home),config.file.root)
+  config.file <- config.file[file.exists(config.file)]
+  config.file <- if ( length(config.file) > 0 ) config.file <- config.file[1] else ""
+  
   raw.config <- if ( file.exists(config.file) ) {
-    if (debug) cat("Build configuration file:",config.file,"\n")
+    cat("Loading build configuration file:",config.file,"\n")
     yaml::yaml.load_file(config.file)
   } else {
     if (!quiet) {
       cat("Using default build configuration.\n")
-      cat("Edit",config.file,"to build other packages.")
+      cat("Edit",config.file.root,"in VE_RUNTIME or VE_HOME to build other packages.")
     }
     list()
   }
