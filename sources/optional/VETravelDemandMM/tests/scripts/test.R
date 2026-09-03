@@ -12,6 +12,7 @@ TestDir <- normalizePath(".")
 if (!endsWith(TestDir, 'tests'))
   TestDir <- file.path(TestDir, 'tests')
 
+source(file.path(TestDir, "scripts", "test_DoPredictions.R"))
 
 #Test PredictVehicles module
 #source("R/PredictVehicles.R")

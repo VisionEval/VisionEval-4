@@ -101,28 +101,51 @@ DoPredictions <- function(Model_df, Dataset_df,
     unnest(id, y)
 
   if ( merge_preds ) {
-    # Get the Preds back in the same order as D_df$HhId
-    # Can't just sort by id since it's a character string rather than
-    # numeric. So we'll extract the numeric index, then rearrange
-    # the predictions to be in that order, then drop the temporary
-    # order field.
-
-    p_order <- as.integer(unlist(str_extract_all(Preds_lcdf$id,"\\d+")))
-    Preds_lcdf <- Preds_lcdf %>% mutate(order=p_order) %>% arrange(order) %>% select(-order)
-
-    if ( ! all(Preds_lcdf$id == Dataset_df[[id_name]]) ) {
-      msg <- c(
-        "Error in VETravelDemandMM::DoPredictions",
-        "Ungrouping grouped predictions failed to get results in correct order."
-      )
-      writeLog(msg[1],Level="error")
-      writeLog(msg[2],Level="error")
-      # stop(msg[1],", see Log for more information.")
-      browser()
-    }
+    Preds_lcdf <- .alignPredictionRows(Preds_lcdf, Dataset_df[[id_name]])
   }
 
   return( Preds_lcdf )
+}
+
+# Restore prediction rows to source-dataset order using complete identities.
+# Household identities are opaque and do not have a generally valid numeric or
+# lexical ordering rule.
+.alignPredictionRows <- function(Preds_lcdf, DatasetIds_) {
+  DatasetIds_ <- as.character(DatasetIds_)
+  PredictionIds_ <- as.character(Preds_lcdf$id)
+
+  if (anyNA(DatasetIds_) || any(!nzchar(DatasetIds_))) {
+    stop("Dataset household identities contain missing or blank values.", call. = FALSE)
+  }
+  if (anyDuplicated(DatasetIds_)) {
+    stop("Dataset household identities are not one-to-one.", call. = FALSE)
+  }
+  if (anyNA(PredictionIds_) || any(!nzchar(PredictionIds_))) {
+    stop("Prediction household identities contain missing or blank values.", call. = FALSE)
+  }
+  if (anyDuplicated(PredictionIds_)) {
+    stop("Prediction household identities are not one-to-one.", call. = FALSE)
+  }
+
+  MissingIds_ <- DatasetIds_[!DatasetIds_ %in% PredictionIds_]
+  ExtraIds_ <- PredictionIds_[!PredictionIds_ %in% DatasetIds_]
+  if (length(MissingIds_)) {
+    stop("Predictions are missing ", length(MissingIds_),
+         " complete household identities.", call. = FALSE)
+  }
+  if (length(ExtraIds_)) {
+    stop("Predictions contain ", length(ExtraIds_),
+         " unexpected complete household identities.", call. = FALSE)
+  }
+
+  Match_ <- match(DatasetIds_, PredictionIds_)
+  Preds_lcdf <- Preds_lcdf[Match_, , drop = FALSE]
+  if (!identical(as.character(Preds_lcdf$id), DatasetIds_)) {
+    stop("Exact household-identity alignment failed to restore Dataset order.",
+         call. = FALSE)
+  }
+
+  Preds_lcdf
 }
 
 #' internal function that handles pass a list column of a data frame to another
