@@ -1,18 +1,21 @@
 # Rebuilding VESimHouseholds to use local PUMS data
 
-The 'data-raw' folder contains R scripts for retrieving and formatting
-# Updating Public Use Microdata Samples (PUMS) data
+The 'data-raw' folder contains R scripts for retrieving and formatting Public Use Microdata Samples
+(PUMS) data.
 
-PUMS data are used in VisionEval's integrated populationg synthesizer.
-The standard module is built using PUMS data from Oregon from year
-2000. In general, it is recommended that the package be rebuilt with
-more recent PUMS data for the area being modeled.
+PUMS data are used in VisionEval's integrated population synthesizer. The standard module is built
+using PUMS data from Oregon from year 2000. In general, it is recommended that the package be
+rebuilt with more recent PUMS data for the area being modeled.
 
 The basic steps for updating the PUMS data include:
 
-1. Determine the Public Use Microdata Areas (PUMAs) that you would
-   like to include in the VESimHouseholds package. The codes should match
-   the `PUMA5` field in the raw PUMS data from the US census.
+0. You need the source code for, at a minimum, `VESimHouseholds`, `VELandUse` and `VESimLandUse`.
+   The simplest way to get these is to do an install with the release code, modify the
+   `VESimHouseholds` PUMS data, and then build VisionEval from scratch. 
+
+1. Determine the Public Use Microdata Areas (PUMAs) that you would like to include in the
+   `VESimHouseholds` package. The codes should match the `PUMA5` field in the raw PUMS data from
+   the US census.
 
 2. Determine what year of PUMS data you would like to retrieve. The
    script will load data from the ACS 5-year Estimates.
@@ -27,9 +30,17 @@ The basic steps for updating the PUMS data include:
    `inst/extdata` folder. You may want to rename the default
    `pums*.csv` files first.
 
-6. Rebuild the VESimLandUse package
+6. Rebuild the VESimHousehold package, then rebuild the VELandUse and VESimLandUse packages, which
+   must be rebuilt after VESimHousehold is built with the new PUMS data.
 
 ## Detailed instructions for updating PUMS data
+
+0. Edit the source code for `VESimHouseholds` and perform the following operations
+   within the `VESimHouseholds/data-raw` folder (location of this `Readme.md` file).
+
+0. Also make sure the source code for `VELandUse` and `VESimLandUse` are available, as those will
+   need to be rebuit after VESimHouseholds has been updated. Neither the code nor the data for those
+   packages needs to changed.
 
 1. Identify the state and PUMAs you would like to include.
 
@@ -84,48 +95,22 @@ The basic steps for updating the PUMS data include:
    `pums_persons.csv`.
 
 5. Move or copy the build files to the `VESimHousholds/inst/extdata`
-   folder
+   folder.
 
    For reference, the folder containing this Readme file and the PUMS
    retrieval script is `VESimHouseholds/data-raw`, so you're just
    moving the build files "next door".
 
    You may want to rename or move the default build files first, but
-   there's no harm in overwriting them. You also have the option of
-   giving the `VESimHouseholds` package an alternate name reflecting
-   the revised raw PUMS data (e.g. `VESimHousholdsRVA` if I were, for
-   instance, rebuilding PUMS for the Richmond Virginia area. Remember
-   that in addition to changing the package folder name, you also need
-   to edit the Name field in the package's `DESCRIPTION` file prior to
-   rebuilding.
+   there's no harm in overwriting them.
 
-6. Rebuild the `VESimHouseholds` package
+6. Rebuild the `VESimHouseholds` package, and then rebuild the dependent
+   packages `VELandUse` and `VESimLandUse`.
 
-   Here's the complete set of steps for the rebuild:
-
-   1. Install the most current VisionEval release from Github (e.g.
-      using the oneline installation script from [the VisionEval
-      website](https://visioneval.github.io/category/download.html)
-
-   2. Edit the `ve-build-config.yml` file in the VE_RUNTIME or VE_HOME
-      folder. The builder will look in the runtime first, then the
-      home folder. There is a sample `ve-build-config-default.yml`
-      file includes locations to rebuild all of VisionEval, which you
-      can certainly do if you have installed the source code for the
-      full system. Or you can edit the `PackageSources` section
-      of the file to just includ the path to the folder containing
-      your update to `VESimHouseholds`.
-
-   3. To do the build from a runtime (no other source code)
-      installation, do these steps in the R console after you have
-      edited `ve-build-config.yml` and started VisionEval:
-
-      ```
-      require(VEBuild)
-      ve.build()
-      ```
-
-      The updated package will be placed in your VisionEval R library
-      and will be used when you next run your model.
+   ```
+   ve.build("VESimHouseholds",reset=TRUE)
+   ve.build(c("VELandUse",reset=TRUE)
+   ve.build(c("VESimLandUse",reset=TRUE)  # You do not need this if you're only running VERSPM
+   ```
 
 
